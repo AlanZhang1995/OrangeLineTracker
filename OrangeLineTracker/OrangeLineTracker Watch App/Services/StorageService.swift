@@ -15,7 +15,18 @@ enum StorageKeys {
     static let selectedDirection = "selectedDirection"
     static let timeRules = "timeRules"
     static let isTimeRuleEnabled = "isTimeRuleEnabled"
+    
+    // Widget shared keys
+    static let selectedStationName = "selectedStationName"
+    static let selectedStationShortName = "selectedStationShortName"
+    static let cachedArrivalMinutes = "cachedArrivalMinutes"
+    static let lastUpdateTime = "lastUpdateTime"
 }
+
+// MARK: - App Group
+
+/// App Group identifier for sharing data with widget
+let appGroupIdentifier = "group.com.orangelinetracker"
 
 // MARK: - StorageServiceProtocol
 
@@ -34,11 +45,20 @@ protocol StorageServiceProtocol: AnyObject {
     /// Whether time rule functionality is enabled
     var isTimeRuleEnabled: Bool { get set }
     
+    /// Cached arrival minutes for widget
+    var cachedArrivalMinutes: Int? { get set }
+    
+    /// Last update time for widget staleness check
+    var lastUpdateTime: Date? { get set }
+    
     /// Saves all current preferences to persistent storage
     func save()
     
     /// Loads all preferences from persistent storage
     func load()
+    
+    /// Updates widget data in shared storage
+    func updateWidgetData(arrivalMinutes: Int?)
 }
 
 // MARK: - StorageService
@@ -51,6 +71,9 @@ class StorageService: StorageServiceProtocol {
     
     /// The UserDefaults instance used for storage
     private let userDefaults: UserDefaults
+    
+    /// Shared UserDefaults for widget communication
+    private let sharedDefaults: UserDefaults?
     
     /// The currently selected station
     /// - Validates: Requirements 1.4, 7.1
@@ -68,12 +91,19 @@ class StorageService: StorageServiceProtocol {
     /// - Validates: Requirements 8.6
     var isTimeRuleEnabled: Bool = false
     
+    /// Cached arrival minutes for widget
+    var cachedArrivalMinutes: Int?
+    
+    /// Last update time for widget staleness check
+    var lastUpdateTime: Date?
+    
     // MARK: - Initialization
     
     /// Creates a new StorageService instance
     /// - Parameter userDefaults: The UserDefaults instance to use (defaults to .standard)
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+        self.sharedDefaults = UserDefaults(suiteName: appGroupIdentifier)
     }
     
     // MARK: - StorageServiceProtocol Methods
@@ -84,15 +114,23 @@ class StorageService: StorageServiceProtocol {
         // Save selected station ID
         if let station = selectedStation {
             userDefaults.set(station.id, forKey: StorageKeys.selectedStationId)
+            // Also save to shared defaults for widget
+            sharedDefaults?.set(station.name, forKey: StorageKeys.selectedStationName)
+            sharedDefaults?.set(station.shortName, forKey: StorageKeys.selectedStationShortName)
         } else {
             userDefaults.removeObject(forKey: StorageKeys.selectedStationId)
+            sharedDefaults?.removeObject(forKey: StorageKeys.selectedStationName)
+            sharedDefaults?.removeObject(forKey: StorageKeys.selectedStationShortName)
         }
         
         // Save selected direction
         if let direction = selectedDirection {
             userDefaults.set(direction.rawValue, forKey: StorageKeys.selectedDirection)
+            // Also save to shared defaults for widget
+            sharedDefaults?.set(direction.rawValue, forKey: StorageKeys.selectedDirection)
         } else {
             userDefaults.removeObject(forKey: StorageKeys.selectedDirection)
+            sharedDefaults?.removeObject(forKey: StorageKeys.selectedDirection)
         }
         
         // Save time rules
@@ -102,6 +140,19 @@ class StorageService: StorageServiceProtocol {
         
         // Save time rule enabled state
         userDefaults.set(isTimeRuleEnabled, forKey: StorageKeys.isTimeRuleEnabled)
+    }
+    
+    /// Updates widget data in shared storage
+    func updateWidgetData(arrivalMinutes: Int?) {
+        cachedArrivalMinutes = arrivalMinutes
+        lastUpdateTime = Date()
+        
+        if let minutes = arrivalMinutes {
+            sharedDefaults?.set(minutes, forKey: StorageKeys.cachedArrivalMinutes)
+        } else {
+            sharedDefaults?.removeObject(forKey: StorageKeys.cachedArrivalMinutes)
+        }
+        sharedDefaults?.set(Date().timeIntervalSince1970, forKey: StorageKeys.lastUpdateTime)
     }
     
     /// Loads all preferences from UserDefaults

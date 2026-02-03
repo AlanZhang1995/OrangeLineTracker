@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import WidgetKit
 
 // MARK: - MetroViewModel
 
@@ -94,6 +95,9 @@ class MetroViewModel: ObservableObject {
         // Clear error when user makes a new selection
         errorMessage = nil
         
+        // Notify widget of station change immediately
+        WidgetCenter.shared.reloadAllTimelines()
+        
         // Refresh predictions for the new station
         Task {
             await refreshPredictions()
@@ -109,6 +113,9 @@ class MetroViewModel: ObservableObject {
         
         // Clear error when user makes a new selection
         errorMessage = nil
+        
+        // Notify widget of direction change immediately
+        WidgetCenter.shared.reloadAllTimelines()
         
         // Refresh predictions for the new direction
         Task {
@@ -143,6 +150,11 @@ class MetroViewModel: ObservableObject {
             cachedPredictions = newPredictions
             lastUpdated = Date()
             errorMessage = nil
+            
+            // Update widget data
+            let arrivalMinutes = newPredictions.first?.minutesUntilArrival
+            storageService.updateWidgetData(arrivalMinutes: arrivalMinutes)
+            WidgetCenter.shared.reloadAllTimelines()
             
         } catch let error as VTAServiceError {
             // Handle VTA service errors

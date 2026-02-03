@@ -92,8 +92,10 @@ class MetroViewModel: ObservableObject {
         selectedStation = station
         savePreferences()
         
-        // Clear error when user makes a new selection
+        // Clear error and cached data when user makes a new selection
         errorMessage = nil
+        cachedPredictions = []
+        predictions = []
         
         // Notify widget of station change immediately
         WidgetCenter.shared.reloadAllTimelines()
@@ -111,8 +113,10 @@ class MetroViewModel: ObservableObject {
         selectedDirection = direction
         savePreferences()
         
-        // Clear error when user makes a new selection
+        // Clear error and cached data when user makes a new selection
         errorMessage = nil
+        cachedPredictions = []
+        predictions = []
         
         // Notify widget of direction change immediately
         WidgetCenter.shared.reloadAllTimelines()

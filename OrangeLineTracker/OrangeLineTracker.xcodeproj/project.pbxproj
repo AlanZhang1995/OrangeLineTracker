@@ -1,0 +1,1004 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D43A3F352F325D63001A8B5C /* OrangeLineTracker Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = D43A3F342F325D63001A8B5C /* OrangeLineTracker Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D43A3F1F2F325D62001A8B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D43A3F092F325D61001A8B5C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D43A3F102F325D61001A8B5C;
+			remoteInfo = OrangeLineTracker;
+		};
+		D43A3F292F325D63001A8B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D43A3F092F325D61001A8B5C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D43A3F102F325D61001A8B5C;
+			remoteInfo = OrangeLineTracker;
+		};
+		D43A3F362F325D63001A8B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D43A3F092F325D61001A8B5C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D43A3F332F325D63001A8B5C;
+			remoteInfo = "OrangeLineTracker Watch App";
+		};
+		D43A3F442F325D64001A8B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D43A3F092F325D61001A8B5C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D43A3F332F325D63001A8B5C;
+			remoteInfo = "OrangeLineTracker Watch App";
+		};
+		D43A3F4E2F325D64001A8B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D43A3F092F325D61001A8B5C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D43A3F332F325D63001A8B5C;
+			remoteInfo = "OrangeLineTracker Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D43A3F5A2F325D64001A8B5C /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				D43A3F352F325D63001A8B5C /* OrangeLineTracker Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D43A3F112F325D61001A8B5C /* OrangeLineTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OrangeLineTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D43A3F1E2F325D62001A8B5C /* OrangeLineTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OrangeLineTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D43A3F282F325D63001A8B5C /* OrangeLineTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OrangeLineTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D43A3F342F325D63001A8B5C /* OrangeLineTracker Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "OrangeLineTracker Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D43A3F432F325D64001A8B5C /* OrangeLineTracker Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "OrangeLineTracker Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D43A3F4D2F325D64001A8B5C /* OrangeLineTracker Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "OrangeLineTracker Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D43A3F132F325D61001A8B5C /* OrangeLineTracker */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OrangeLineTracker;
+			sourceTree = "<group>";
+		};
+		D43A3F212F325D62001A8B5C /* OrangeLineTrackerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OrangeLineTrackerTests;
+			sourceTree = "<group>";
+		};
+		D43A3F2B2F325D63001A8B5C /* OrangeLineTrackerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OrangeLineTrackerUITests;
+			sourceTree = "<group>";
+		};
+		D43A3F382F325D63001A8B5C /* OrangeLineTracker Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "OrangeLineTracker Watch App";
+			sourceTree = "<group>";
+		};
+		D43A3F462F325D64001A8B5C /* OrangeLineTracker Watch AppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "OrangeLineTracker Watch AppTests";
+			sourceTree = "<group>";
+		};
+		D43A3F502F325D64001A8B5C /* OrangeLineTracker Watch AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "OrangeLineTracker Watch AppUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D43A3F0E2F325D61001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F1B2F325D62001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F252F325D63001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F312F325D63001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F402F325D64001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F4A2F325D64001A8B5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D43A3F082F325D61001A8B5C = {
+			isa = PBXGroup;
+			children = (
+				D43A3F132F325D61001A8B5C /* OrangeLineTracker */,
+				D43A3F212F325D62001A8B5C /* OrangeLineTrackerTests */,
+				D43A3F2B2F325D63001A8B5C /* OrangeLineTrackerUITests */,
+				D43A3F382F325D63001A8B5C /* OrangeLineTracker Watch App */,
+				D43A3F462F325D64001A8B5C /* OrangeLineTracker Watch AppTests */,
+				D43A3F502F325D64001A8B5C /* OrangeLineTracker Watch AppUITests */,
+				D43A3F122F325D61001A8B5C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D43A3F122F325D61001A8B5C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D43A3F112F325D61001A8B5C /* OrangeLineTracker.app */,
+				D43A3F1E2F325D62001A8B5C /* OrangeLineTrackerTests.xctest */,
+				D43A3F282F325D63001A8B5C /* OrangeLineTrackerUITests.xctest */,
+				D43A3F342F325D63001A8B5C /* OrangeLineTracker Watch App.app */,
+				D43A3F432F325D64001A8B5C /* OrangeLineTracker Watch AppTests.xctest */,
+				D43A3F4D2F325D64001A8B5C /* OrangeLineTracker Watch AppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D43A3F102F325D61001A8B5C /* OrangeLineTracker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F5B2F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker" */;
+			buildPhases = (
+				D43A3F0D2F325D61001A8B5C /* Sources */,
+				D43A3F0E2F325D61001A8B5C /* Frameworks */,
+				D43A3F0F2F325D61001A8B5C /* Resources */,
+				D43A3F5A2F325D64001A8B5C /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D43A3F372F325D63001A8B5C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F132F325D61001A8B5C /* OrangeLineTracker */,
+			);
+			name = OrangeLineTracker;
+			packageProductDependencies = (
+			);
+			productName = OrangeLineTracker;
+			productReference = D43A3F112F325D61001A8B5C /* OrangeLineTracker.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D43A3F1D2F325D62001A8B5C /* OrangeLineTrackerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F5E2F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTrackerTests" */;
+			buildPhases = (
+				D43A3F1A2F325D62001A8B5C /* Sources */,
+				D43A3F1B2F325D62001A8B5C /* Frameworks */,
+				D43A3F1C2F325D62001A8B5C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D43A3F202F325D62001A8B5C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F212F325D62001A8B5C /* OrangeLineTrackerTests */,
+			);
+			name = OrangeLineTrackerTests;
+			packageProductDependencies = (
+			);
+			productName = OrangeLineTrackerTests;
+			productReference = D43A3F1E2F325D62001A8B5C /* OrangeLineTrackerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D43A3F272F325D63001A8B5C /* OrangeLineTrackerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F612F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTrackerUITests" */;
+			buildPhases = (
+				D43A3F242F325D63001A8B5C /* Sources */,
+				D43A3F252F325D63001A8B5C /* Frameworks */,
+				D43A3F262F325D63001A8B5C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D43A3F2A2F325D63001A8B5C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F2B2F325D63001A8B5C /* OrangeLineTrackerUITests */,
+			);
+			name = OrangeLineTrackerUITests;
+			packageProductDependencies = (
+			);
+			productName = OrangeLineTrackerUITests;
+			productReference = D43A3F282F325D63001A8B5C /* OrangeLineTrackerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		D43A3F332F325D63001A8B5C /* OrangeLineTracker Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F572F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch App" */;
+			buildPhases = (
+				D43A3F302F325D63001A8B5C /* Sources */,
+				D43A3F312F325D63001A8B5C /* Frameworks */,
+				D43A3F322F325D63001A8B5C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F382F325D63001A8B5C /* OrangeLineTracker Watch App */,
+			);
+			name = "OrangeLineTracker Watch App";
+			packageProductDependencies = (
+			);
+			productName = "OrangeLineTracker Watch App";
+			productReference = D43A3F342F325D63001A8B5C /* OrangeLineTracker Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D43A3F422F325D64001A8B5C /* OrangeLineTracker Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F642F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch AppTests" */;
+			buildPhases = (
+				D43A3F3F2F325D64001A8B5C /* Sources */,
+				D43A3F402F325D64001A8B5C /* Frameworks */,
+				D43A3F412F325D64001A8B5C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D43A3F452F325D64001A8B5C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F462F325D64001A8B5C /* OrangeLineTracker Watch AppTests */,
+			);
+			name = "OrangeLineTracker Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "OrangeLineTracker Watch AppTests";
+			productReference = D43A3F432F325D64001A8B5C /* OrangeLineTracker Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D43A3F4C2F325D64001A8B5C /* OrangeLineTracker Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D43A3F672F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch AppUITests" */;
+			buildPhases = (
+				D43A3F492F325D64001A8B5C /* Sources */,
+				D43A3F4A2F325D64001A8B5C /* Frameworks */,
+				D43A3F4B2F325D64001A8B5C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D43A3F4F2F325D64001A8B5C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D43A3F502F325D64001A8B5C /* OrangeLineTracker Watch AppUITests */,
+			);
+			name = "OrangeLineTracker Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "OrangeLineTracker Watch AppUITests";
+			productReference = D43A3F4D2F325D64001A8B5C /* OrangeLineTracker Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D43A3F092F325D61001A8B5C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					D43A3F102F325D61001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					D43A3F1D2F325D62001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D43A3F102F325D61001A8B5C;
+					};
+					D43A3F272F325D63001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D43A3F102F325D61001A8B5C;
+					};
+					D43A3F332F325D63001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					D43A3F422F325D64001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D43A3F332F325D63001A8B5C;
+					};
+					D43A3F4C2F325D64001A8B5C = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D43A3F332F325D63001A8B5C;
+					};
+				};
+			};
+			buildConfigurationList = D43A3F0C2F325D61001A8B5C /* Build configuration list for PBXProject "OrangeLineTracker" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D43A3F082F325D61001A8B5C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D43A3F122F325D61001A8B5C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D43A3F102F325D61001A8B5C /* OrangeLineTracker */,
+				D43A3F1D2F325D62001A8B5C /* OrangeLineTrackerTests */,
+				D43A3F272F325D63001A8B5C /* OrangeLineTrackerUITests */,
+				D43A3F332F325D63001A8B5C /* OrangeLineTracker Watch App */,
+				D43A3F422F325D64001A8B5C /* OrangeLineTracker Watch AppTests */,
+				D43A3F4C2F325D64001A8B5C /* OrangeLineTracker Watch AppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D43A3F0F2F325D61001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F1C2F325D62001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F262F325D63001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F322F325D63001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F412F325D64001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F4B2F325D64001A8B5C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D43A3F0D2F325D61001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F1A2F325D62001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F242F325D63001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F302F325D63001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F3F2F325D64001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D43A3F492F325D64001A8B5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D43A3F202F325D62001A8B5C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D43A3F102F325D61001A8B5C /* OrangeLineTracker */;
+			targetProxy = D43A3F1F2F325D62001A8B5C /* PBXContainerItemProxy */;
+		};
+		D43A3F2A2F325D63001A8B5C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D43A3F102F325D61001A8B5C /* OrangeLineTracker */;
+			targetProxy = D43A3F292F325D63001A8B5C /* PBXContainerItemProxy */;
+		};
+		D43A3F372F325D63001A8B5C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D43A3F332F325D63001A8B5C /* OrangeLineTracker Watch App */;
+			targetProxy = D43A3F362F325D63001A8B5C /* PBXContainerItemProxy */;
+		};
+		D43A3F452F325D64001A8B5C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D43A3F332F325D63001A8B5C /* OrangeLineTracker Watch App */;
+			targetProxy = D43A3F442F325D64001A8B5C /* PBXContainerItemProxy */;
+		};
+		D43A3F4F2F325D64001A8B5C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D43A3F332F325D63001A8B5C /* OrangeLineTracker Watch App */;
+			targetProxy = D43A3F4E2F325D64001A8B5C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D43A3F552F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D43A3F562F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		D43A3F582F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OrangeLineTracker;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.hz.OrangeLineTracker;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTracker.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		D43A3F592F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OrangeLineTracker;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.hz.OrangeLineTracker;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTracker.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		D43A3F5C2F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OrangeLineTracker;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTracker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D43A3F5D2F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = OrangeLineTracker;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTracker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D43A3F5F2F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTrackerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OrangeLineTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OrangeLineTracker";
+			};
+			name = Debug;
+		};
+		D43A3F602F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTrackerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OrangeLineTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OrangeLineTracker";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D43A3F622F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTrackerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OrangeLineTracker;
+			};
+			name = Debug;
+		};
+		D43A3F632F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hz.OrangeLineTrackerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OrangeLineTracker;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D43A3F652F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hz.OrangeLineTracker-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OrangeLineTracker Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OrangeLineTracker Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		D43A3F662F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hz.OrangeLineTracker-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OrangeLineTracker Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OrangeLineTracker Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		D43A3F682F325D64001A8B5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hz.OrangeLineTracker-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "OrangeLineTracker Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		D43A3F692F325D64001A8B5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48RQGLFGRA;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hz.OrangeLineTracker-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "OrangeLineTracker Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D43A3F0C2F325D61001A8B5C /* Build configuration list for PBXProject "OrangeLineTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F552F325D64001A8B5C /* Debug */,
+				D43A3F562F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F572F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F582F325D64001A8B5C /* Debug */,
+				D43A3F592F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F5B2F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F5C2F325D64001A8B5C /* Debug */,
+				D43A3F5D2F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F5E2F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTrackerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F5F2F325D64001A8B5C /* Debug */,
+				D43A3F602F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F612F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTrackerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F622F325D64001A8B5C /* Debug */,
+				D43A3F632F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F642F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F652F325D64001A8B5C /* Debug */,
+				D43A3F662F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43A3F672F325D64001A8B5C /* Build configuration list for PBXNativeTarget "OrangeLineTracker Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43A3F682F325D64001A8B5C /* Debug */,
+				D43A3F692F325D64001A8B5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D43A3F092F325D61001A8B5C /* Project object */;
+}

@@ -21,6 +21,8 @@ enum StorageKeys {
     static let selectedStationShortName = "selectedStationShortName"
     static let cachedArrivalMinutes = "cachedArrivalMinutes"
     static let lastUpdateTime = "lastUpdateTime"
+    static let arrivalTimestamp = "arrivalTimestamp"  // 到站时间戳，用于本地倒计时
+    static let widgetTimeRules = "widgetTimeRules"  // Widget 用的时间规则
 }
 
 // MARK: - App Group
@@ -140,17 +142,49 @@ class StorageService: StorageServiceProtocol {
         
         // Save time rule enabled state
         userDefaults.set(isTimeRuleEnabled, forKey: StorageKeys.isTimeRuleEnabled)
+        
+        // Sync time rules to widget shared defaults
+        syncTimeRulesToWidget()
+    }
+    
+    /// Syncs time rules to widget shared defaults
+    private func syncTimeRulesToWidget() {
+        // Convert TimeRule to WidgetTimeRule format
+        let widgetRules = timeRules.map { rule -> WidgetTimeRule in
+            let station = OrangeLineStations.station(byId: rule.stationId)
+            return WidgetTimeRule(
+                id: rule.id,
+                name: rule.name,
+                triggerHour: rule.triggerHour,
+                triggerMinute: rule.triggerMinute,
+                stationId: rule.stationId,
+                stationName: station?.name ?? "--",
+                stationShortName: station?.shortName ?? "--",
+                direction: rule.direction.rawValue,
+                isEnabled: rule.isEnabled
+            )
+        }
+        
+        if let encodedRules = try? JSONEncoder().encode(widgetRules) {
+            sharedDefaults?.set(encodedRules, forKey: StorageKeys.timeRules)
+        }
+        sharedDefaults?.set(isTimeRuleEnabled, forKey: StorageKeys.isTimeRuleEnabled)
     }
     
     /// Updates widget data in shared storage
+    /// Stores arrival timestamp for local countdown calculation
     func updateWidgetData(arrivalMinutes: Int?) {
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
         
         if let minutes = arrivalMinutes {
             sharedDefaults?.set(minutes, forKey: StorageKeys.cachedArrivalMinutes)
+            // 存储到站时间戳，Widget 可以根据当前时间动态计算倒计时
+            let arrivalTimestamp = Date().addingTimeInterval(TimeInterval(minutes * 60))
+            sharedDefaults?.set(arrivalTimestamp.timeIntervalSince1970, forKey: StorageKeys.arrivalTimestamp)
         } else {
             sharedDefaults?.removeObject(forKey: StorageKeys.cachedArrivalMinutes)
+            sharedDefaults?.removeObject(forKey: StorageKeys.arrivalTimestamp)
         }
         sharedDefaults?.set(Date().timeIntervalSince1970, forKey: StorageKeys.lastUpdateTime)
     }
@@ -205,4 +239,20 @@ class StorageService: StorageServiceProtocol {
         userDefaults.string(forKey: StorageKeys.selectedStationId) != nil ||
         userDefaults.string(forKey: StorageKeys.selectedDirection) != nil
     }
+}
+
+
+// MARK: - Widget Time Rule
+
+/// Simplified TimeRule structure for Widget (to avoid circular dependencies)
+struct WidgetTimeRule: Codable {
+    let id: UUID
+    let name: String
+    let triggerHour: Int
+    let triggerMinute: Int
+    let stationId: String
+    let stationName: String
+    let stationShortName: String
+    let direction: String
+    let isEnabled: Bool
 }

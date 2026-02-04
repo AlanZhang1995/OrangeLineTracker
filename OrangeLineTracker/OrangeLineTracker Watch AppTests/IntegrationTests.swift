@@ -23,9 +23,12 @@ class IntegrationMockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var cachedArrivalMinutes: Int?
+    var lastUpdateTime: Date?
     
     var saveCallCount = 0
     var loadCallCount = 0
+    var updateWidgetDataCallCount = 0
     
     func save() {
         saveCallCount += 1
@@ -35,13 +38,22 @@ class IntegrationMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
+    func updateWidgetData(arrivalMinutes: Int?) {
+        updateWidgetDataCallCount += 1
+        cachedArrivalMinutes = arrivalMinutes
+        lastUpdateTime = Date()
+    }
+    
     func reset() {
         selectedStation = nil
         selectedDirection = nil
         timeRules = []
         isTimeRuleEnabled = false
+        cachedArrivalMinutes = nil
+        lastUpdateTime = nil
         saveCallCount = 0
         loadCallCount = 0
+        updateWidgetDataCallCount = 0
     }
 }
 
@@ -275,7 +287,7 @@ struct TimeRuleAutomaticSwitchingIntegrationTests {
         mockStorageService.selectedDirection = .alumRock
         
         // Set up an active time rule
-        let targetStation = OrangeLineStations.stations[28] // Alum Rock
+        let targetStation = OrangeLineStations.stations[27] // Alum Rock
         mockTimeRuleService.mockActiveRule = TimeRule(
             name: "Evening Commute",
             triggerTime: TimeRule.createTriggerTime(hour: 17, minute: 30),
@@ -1223,7 +1235,7 @@ struct CompleteSystemIntegrationTests {
         let stationsToTest = [
             OrangeLineStations.stations[0],  // Mountain View
             OrangeLineStations.stations[12], // Great America
-            OrangeLineStations.stations[28]  // Alum Rock
+            OrangeLineStations.stations[27]  // Alum Rock
         ]
         
         for station in stationsToTest {
@@ -1243,8 +1255,8 @@ struct CompleteSystemIntegrationTests {
             // Verify correct station is selected
             #expect(viewModel.selectedStation?.id == station.id)
             
-            // Verify correct station was requested from API
-            #expect(mockVTAService.lastRequestedStationId == station.id)
+            // Verify correct station was requested from API (uses eastbound ID for default alumRock direction)
+            #expect(mockVTAService.lastRequestedStationId == station.stationId(for: .alumRock))
             
             // Verify predictions match
             #expect(viewModel.nextPrediction?.minutesUntilArrival == station.order + 1)

@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import WidgetKit
 
 // MARK: - TimeRuleViewModel
 
@@ -72,6 +73,9 @@ class TimeRuleViewModel: ObservableObject {
         timeRuleService.addRule(rule)
         loadRules()
         
+        // Notify widget to reload with updated rules
+        WidgetCenter.shared.reloadAllTimelines()
+        
         isSaving = false
     }
     
@@ -114,6 +118,9 @@ class TimeRuleViewModel: ObservableObject {
         timeRuleService.updateRule(rule)
         loadRules()
         
+        // Notify widget to reload with updated rules
+        WidgetCenter.shared.reloadAllTimelines()
+        
         isSaving = false
     }
     
@@ -126,6 +133,9 @@ class TimeRuleViewModel: ObservableObject {
         
         timeRuleService.deleteRule(rule)
         loadRules()
+        
+        // Notify widget to reload with updated rules
+        WidgetCenter.shared.reloadAllTimelines()
         
         isSaving = false
     }
@@ -180,6 +190,9 @@ class TimeRuleViewModel: ObservableObject {
         storageService.isTimeRuleEnabled = enabled
         storageService.save()
         isTimeRuleEnabled = enabled
+        
+        // Notify widget to reload with updated enabled state
+        WidgetCenter.shared.reloadAllTimelines()
         
         isSaving = false
     }

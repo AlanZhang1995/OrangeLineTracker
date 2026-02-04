@@ -534,7 +534,7 @@ struct ComplicationDataModelTests {
     // MARK: - Factory Method Tests
     
     @Test func fromPredictionCreatesCorrectData() {
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         let prediction = Prediction(
             minutesUntilArrival: 5,
             arrivalStatus: .scheduled,
@@ -553,7 +553,7 @@ struct ComplicationDataModelTests {
     }
     
     @Test func fromPredictionWithArrivingStatusSetsNilMinutes() {
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         let prediction = Prediction(
             minutesUntilArrival: 1,
             arrivalStatus: .arriving,
@@ -571,7 +571,7 @@ struct ComplicationDataModelTests {
     }
     
     @Test func fromPredictionWithBoardingStatusSetsNilMinutes() {
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         let prediction = Prediction(
             minutesUntilArrival: 0,
             arrivalStatus: .boarding,
@@ -589,7 +589,7 @@ struct ComplicationDataModelTests {
     }
     
     @Test func fromOptionalPredictionReturnsErrorStateForNilPrediction() {
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         
         let data = ComplicationData.from(
             prediction: nil,
@@ -617,7 +617,7 @@ struct ComplicationDataModelTests {
     }
     
     @Test func fromOptionalPredictionReturnsValidDataForValidInputs() {
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         let prediction = Prediction(
             minutesUntilArrival: 5,
             arrivalStatus: .scheduled,

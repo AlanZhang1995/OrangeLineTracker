@@ -15,6 +15,7 @@ final class BackgroundRefreshManagerTests: XCTestCase {
     
     var mockVTAService: MockVTAService!
     var mockStorageService: MockStorageService!
+    var mockTimeRuleService: MockTimeRuleService!
     var complicationController: ComplicationController!
     var backgroundRefreshManager: BackgroundRefreshManager!
     
@@ -23,10 +24,12 @@ final class BackgroundRefreshManagerTests: XCTestCase {
         super.setUp()
         mockVTAService = MockVTAService()
         mockStorageService = MockStorageService()
+        mockTimeRuleService = MockTimeRuleService(storageService: mockStorageService)
         complicationController = ComplicationController(storageService: mockStorageService)
         backgroundRefreshManager = BackgroundRefreshManager(
             vtaService: mockVTAService,
             storageService: mockStorageService,
+            timeRuleService: mockTimeRuleService,
             complicationController: complicationController
         )
     }
@@ -35,6 +38,7 @@ final class BackgroundRefreshManagerTests: XCTestCase {
     override func tearDown() {
         mockVTAService.reset()
         mockStorageService = nil
+        mockTimeRuleService = nil
         backgroundRefreshManager = nil
         complicationController = nil
         super.tearDown()
@@ -261,6 +265,7 @@ final class BackgroundRefreshManagerExtensionTests: XCTestCase {
     
     var mockVTAService: MockVTAService!
     var mockStorageService: MockStorageService!
+    var mockTimeRuleService: MockTimeRuleService!
     var complicationController: ComplicationController!
     var backgroundRefreshManager: BackgroundRefreshManager!
     
@@ -269,10 +274,12 @@ final class BackgroundRefreshManagerExtensionTests: XCTestCase {
         super.setUp()
         mockVTAService = MockVTAService()
         mockStorageService = MockStorageService()
+        mockTimeRuleService = MockTimeRuleService(storageService: mockStorageService)
         complicationController = ComplicationController(storageService: mockStorageService)
         backgroundRefreshManager = BackgroundRefreshManager(
             vtaService: mockVTAService,
             storageService: mockStorageService,
+            timeRuleService: mockTimeRuleService,
             complicationController: complicationController
         )
     }
@@ -281,6 +288,7 @@ final class BackgroundRefreshManagerExtensionTests: XCTestCase {
     override func tearDown() {
         mockVTAService.reset()
         mockStorageService = nil
+        mockTimeRuleService = nil
         backgroundRefreshManager = nil
         complicationController = nil
         super.tearDown()

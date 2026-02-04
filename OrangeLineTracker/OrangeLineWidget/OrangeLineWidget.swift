@@ -20,6 +20,9 @@ private enum WidgetStorageKeys {
     static let selectedDirection = "selectedDirection"
     static let cachedArrivalMinutes = "cachedArrivalMinutes"
     static let lastUpdateTime = "lastUpdateTime"
+    static let arrivalTimestamp = "arrivalTimestamp"  // 到站时间戳
+    static let timeRules = "timeRules"  // 时间规则
+    static let isTimeRuleEnabled = "isTimeRuleEnabled"  // 时间规则是否启用
 }
 
 // MARK: - Timeline Entry
@@ -68,49 +71,222 @@ struct OrangeLineProvider: TimelineProvider {
     }
     
     func getSnapshot(in context: Context, completion: @escaping (OrangeLineEntry) -> Void) {
-        let entry = loadCurrentEntry()
+        let entry = loadCurrentEntry(for: Date())
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<OrangeLineEntry>) -> Void) {
-        let entry = loadCurrentEntry()
+        var entries: [OrangeLineEntry] = []
+        let now = Date()
         
-        // Refresh every 2 minutes
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 2, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        guard let defaults = sharedDefaults else {
+            let entry = OrangeLineEntry.noData
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 2, to: now) ?? now
+            let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+            completion(timeline)
+            return
+        }
+        
+        // 加载时间规则
+        let timeRules = loadTimeRules(from: defaults)
+        let isTimeRuleEnabled = defaults.bool(forKey: WidgetStorageKeys.isTimeRuleEnabled)
+        
+        // 获取当前活跃的规则（基于当前时间）
+        let activeRule = isTimeRuleEnabled ? findActiveRule(rules: timeRules, at: now) : nil
+        
+        // 确定当前应该显示的站点信息
+        let currentStationInfo = getStationInfo(defaults: defaults, activeRule: activeRule)
+        
+        // 生成未来 60 分钟的 entries
+        // 检查是否有规则会在这段时间内触发
+        var lastRuleId: UUID? = activeRule?.id
+        
+        for minuteOffset in 0..<60 {
+            guard let entryDate = Calendar.current.date(byAdding: .minute, value: minuteOffset, to: now) else {
+                continue
+            }
+            
+            // 检查这个时间点是否有新规则触发
+            var stationInfo = currentStationInfo
+            if isTimeRuleEnabled {
+                let ruleAtTime = findActiveRule(rules: timeRules, at: entryDate)
+                if let rule = ruleAtTime, rule.id != lastRuleId {
+                    // 新规则触发，更新站点信息
+                    stationInfo = getStationInfoFromRule(rule)
+                    lastRuleId = rule.id
+                }
+            }
+            
+            // 计算到站时间（如果有缓存的到站时间戳）
+            var arrivalMinutes: Int? = nil
+            if let arrivalTimestamp = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp) as? TimeInterval {
+                let arrivalDate = Date(timeIntervalSince1970: arrivalTimestamp)
+                let remainingSeconds = arrivalDate.timeIntervalSince(entryDate)
+                let remainingMinutes = Int(ceil(remainingSeconds / 60))
+                // 只有当规则没有变化时才显示到站时间
+                // 规则变化后需要等待新的 API 数据
+                if lastRuleId == activeRule?.id || activeRule == nil {
+                    arrivalMinutes = remainingMinutes > 0 ? remainingMinutes : (remainingMinutes == 0 ? 0 : nil)
+                }
+            }
+            
+            // 检查数据是否过期
+            var isStale = true
+            if let lastUpdateTimestamp = defaults.object(forKey: WidgetStorageKeys.lastUpdateTime) as? TimeInterval {
+                let lastUpdate = Date(timeIntervalSince1970: lastUpdateTimestamp)
+                isStale = entryDate.timeIntervalSince(lastUpdate) > 300
+            }
+            
+            let entry = OrangeLineEntry(
+                date: entryDate,
+                stationName: stationInfo.name,
+                stationShortName: stationInfo.shortName,
+                direction: stationInfo.direction,
+                arrivalMinutes: arrivalMinutes,
+                isStale: isStale || (lastRuleId != activeRule?.id && activeRule != nil)
+            )
+            entries.append(entry)
+        }
+        
+        // 60 分钟后请求新的 timeline
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 60, to: now) ?? now
+        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
     }
     
-    private func loadCurrentEntry() -> OrangeLineEntry {
+    // MARK: - Helper Methods
+    
+    private func loadCurrentEntry(for date: Date) -> OrangeLineEntry {
         guard let defaults = sharedDefaults else {
             return OrangeLineEntry.noData
         }
         
-        let stationName = defaults.string(forKey: WidgetStorageKeys.selectedStationName) ?? "--"
-        let stationShortName = defaults.string(forKey: WidgetStorageKeys.selectedStationShortName) ?? "--"
-        let direction = defaults.string(forKey: WidgetStorageKeys.selectedDirection) ?? "--"
+        // 加载时间规则
+        let timeRules = loadTimeRules(from: defaults)
+        let isTimeRuleEnabled = defaults.bool(forKey: WidgetStorageKeys.isTimeRuleEnabled)
         
+        // 获取当前活跃的规则
+        let activeRule = isTimeRuleEnabled ? findActiveRule(rules: timeRules, at: date) : nil
+        
+        // 确定当前应该显示的站点信息
+        let stationInfo = getStationInfo(defaults: defaults, activeRule: activeRule)
+        
+        // 计算到站时间
         var arrivalMinutes: Int? = nil
-        if defaults.object(forKey: WidgetStorageKeys.cachedArrivalMinutes) != nil {
+        if let arrivalTimestamp = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp) as? TimeInterval {
+            let arrivalDate = Date(timeIntervalSince1970: arrivalTimestamp)
+            let remainingSeconds = arrivalDate.timeIntervalSince(date)
+            let remainingMinutes = Int(ceil(remainingSeconds / 60))
+            arrivalMinutes = remainingMinutes > 0 ? remainingMinutes : (remainingMinutes == 0 ? 0 : nil)
+        } else if defaults.object(forKey: WidgetStorageKeys.cachedArrivalMinutes) != nil {
             arrivalMinutes = defaults.integer(forKey: WidgetStorageKeys.cachedArrivalMinutes)
         }
         
-        // Check if data is stale (older than 5 minutes)
+        // 检查数据是否过期
         var isStale = true
         if let lastUpdateTimestamp = defaults.object(forKey: WidgetStorageKeys.lastUpdateTime) as? TimeInterval {
             let lastUpdate = Date(timeIntervalSince1970: lastUpdateTimestamp)
-            isStale = Date().timeIntervalSince(lastUpdate) > 300 // 5 minutes
+            isStale = date.timeIntervalSince(lastUpdate) > 300
         }
         
         return OrangeLineEntry(
-            date: Date(),
-            stationName: stationName,
-            stationShortName: stationShortName,
-            direction: direction,
+            date: date,
+            stationName: stationInfo.name,
+            stationShortName: stationInfo.shortName,
+            direction: stationInfo.direction,
             arrivalMinutes: arrivalMinutes,
             isStale: isStale
         )
     }
+    
+    // MARK: - Time Rule Helpers
+    
+    /// 从 UserDefaults 加载时间规则
+    private func loadTimeRules(from defaults: UserDefaults) -> [WidgetTimeRule] {
+        guard let data = defaults.data(forKey: WidgetStorageKeys.timeRules),
+              let rules = try? JSONDecoder().decode([WidgetTimeRule].self, from: data) else {
+            return []
+        }
+        return rules.filter { $0.isEnabled }
+    }
+    
+    /// 查找当前时间应该激活的规则
+    /// 使用与 TimeRuleService 相同的逻辑：找到最近过去的触发时间对应的规则
+    private func findActiveRule(rules: [WidgetTimeRule], at date: Date) -> WidgetTimeRule? {
+        guard !rules.isEmpty else { return nil }
+        
+        let calendar = Calendar.current
+        let currentHour = calendar.component(.hour, from: date)
+        let currentMinute = calendar.component(.minute, from: date)
+        let currentMinutesSinceMidnight = currentHour * 60 + currentMinute
+        
+        var activeRule: WidgetTimeRule? = nil
+        var smallestDiff = Int.max
+        
+        for rule in rules {
+            let ruleMinutes = rule.triggerHour * 60 + rule.triggerMinute
+            
+            // 计算从规则触发时间到当前时间的差值
+            var diff = currentMinutesSinceMidnight - ruleMinutes
+            if diff < 0 {
+                // 规则时间在当前时间之后，需要加上一天的分钟数
+                diff += 24 * 60
+            }
+            
+            // 找到最近触发的规则（差值最小）
+            if diff < smallestDiff {
+                smallestDiff = diff
+                activeRule = rule
+            }
+        }
+        
+        return activeRule
+    }
+    
+    /// 获取站点信息（考虑时间规则）
+    private func getStationInfo(defaults: UserDefaults, activeRule: WidgetTimeRule?) -> StationInfo {
+        if let rule = activeRule {
+            return getStationInfoFromRule(rule)
+        }
+        
+        // 使用默认存储的站点信息
+        let name = defaults.string(forKey: WidgetStorageKeys.selectedStationName) ?? "--"
+        let shortName = defaults.string(forKey: WidgetStorageKeys.selectedStationShortName) ?? "--"
+        let direction = defaults.string(forKey: WidgetStorageKeys.selectedDirection) ?? "--"
+        
+        return StationInfo(name: name, shortName: shortName, direction: direction)
+    }
+    
+    /// 从规则获取站点信息
+    private func getStationInfoFromRule(_ rule: WidgetTimeRule) -> StationInfo {
+        return StationInfo(
+            name: rule.stationName,
+            shortName: rule.stationShortName,
+            direction: rule.direction
+        )
+    }
+}
+
+// MARK: - Helper Types
+
+/// 站点信息结构
+private struct StationInfo {
+    let name: String
+    let shortName: String
+    let direction: String
+}
+
+/// Widget 用的简化版 TimeRule（避免依赖 App 的模型）
+private struct WidgetTimeRule: Codable {
+    let id: UUID
+    let name: String
+    let triggerHour: Int
+    let triggerMinute: Int
+    let stationId: String
+    let stationName: String
+    let stationShortName: String
+    let direction: String
+    let isEnabled: Bool
 }
 
 // MARK: - Widget Views
@@ -145,13 +321,14 @@ struct CircularView: View {
             AccessoryWidgetBackground()
             
             VStack(spacing: 0) {
-                if let minutes = entry.arrivalMinutes, !entry.isStale {
+                if let minutes = entry.arrivalMinutes {
                     Text("\(minutes)")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.orange)
-                    Text("min")
+                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                    // 缓存数据显示 "旧" 标识
+                    Text(entry.isStale ? "旧" : "min")
                         .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(entry.isStale ? .yellow : .secondary)
                 } else {
                     // 大字显示站名缩写
                     Text(entry.stationShortName)
@@ -187,11 +364,20 @@ struct RectangularView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 // 大字显示站名
-                Text(entry.stationName)
-                    .font(.headline)
-                    .foregroundColor(.orange)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                HStack(spacing: 4) {
+                    Text(entry.stationName)
+                        .font(.headline)
+                        .foregroundColor(entry.isStale ? .orange.opacity(0.7) : .orange)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    
+                    // 缓存数据标识
+                    if entry.isStale && entry.arrivalMinutes != nil {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption2)
+                            .foregroundColor(.yellow)
+                    }
+                }
                 
                 // 小字显示方向
                 Text(directionText)
@@ -201,14 +387,15 @@ struct RectangularView: View {
             
             Spacer()
             
-            if let minutes = entry.arrivalMinutes, !entry.isStale {
+            if let minutes = entry.arrivalMinutes {
                 VStack(alignment: .trailing) {
                     Text("\(minutes)")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(.orange)
-                    Text("min")
+                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                    // 缓存数据显示 "缓存" 标识
+                    Text(entry.isStale ? "缓存" : "min")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(entry.isStale ? .yellow : .secondary)
                 }
             } else {
                 Text("--")
@@ -231,9 +418,10 @@ struct InlineView: View {
     }
     
     var body: some View {
-        if let minutes = entry.arrivalMinutes, !entry.isStale {
-            // 站名 方向 时间
-            Label("\(entry.stationShortName) \(directionShort) \(minutes)min", systemImage: "tram.fill")
+        if let minutes = entry.arrivalMinutes {
+            // 站名 方向 时间，缓存数据加 ⏱ 标识
+            let cacheIndicator = entry.isStale ? "⏱" : ""
+            Label("\(entry.stationShortName) \(directionShort) \(minutes)min\(cacheIndicator)", systemImage: "tram.fill")
         } else {
             // 站名 方向
             Label("\(entry.stationShortName) \(directionShort)", systemImage: "tram.fill")
@@ -253,10 +441,18 @@ struct CornerView: View {
     
     var body: some View {
         ZStack {
-            if let minutes = entry.arrivalMinutes, !entry.isStale {
-                Text("\(minutes)")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.orange)
+            if let minutes = entry.arrivalMinutes {
+                VStack(spacing: 0) {
+                    Text("\(minutes)")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                    // 缓存数据显示小字 "旧"
+                    if entry.isStale {
+                        Text("旧")
+                            .font(.system(size: 8))
+                            .foregroundColor(.yellow)
+                    }
+                }
             } else {
                 // 显示站名缩写
                 Text(entry.stationShortName)

@@ -76,6 +76,10 @@ class TimeRuleService: TimeRuleServiceProtocol {
     /// - Returns: The TimeRule that should be applied, or nil if no rule matches
     /// - Validates: Requirements 8.3, 8.6, 8.7
     func shouldApplyRule(at date: Date) -> TimeRule? {
+        // Reload storage to get fresh data from UserDefaults
+        // This is critical for background refresh and timer-based checks
+        storageService.load()
+        
         // If time rules are disabled globally, return nil
         // Validates: Requirements 8.6, 8.7
         guard storageService.isTimeRuleEnabled else {
@@ -135,10 +139,14 @@ class TimeRuleService: TimeRuleServiceProtocol {
         let currentMinute = calendar.component(.minute, from: date)
         let currentTimeInMinutes = currentHour * 60 + currentMinute
         
-        // Get all enabled rules
+        // Get all enabled rules (storage was already loaded in shouldApplyRule)
         let enabledRules = storageService.timeRules.filter { $0.isEnabled }
         
+        print("TimeRuleService: Checking rules at \(currentHour):\(String(format: "%02d", currentMinute)) (\(currentTimeInMinutes) minutes)")
+        print("TimeRuleService: Found \(enabledRules.count) enabled rules")
+        
         guard !enabledRules.isEmpty else {
+            print("TimeRuleService: No enabled rules found")
             return nil
         }
         
@@ -149,6 +157,7 @@ class TimeRuleService: TimeRuleServiceProtocol {
         
         for rule in enabledRules {
             let ruleTriggerTimeInMinutes = rule.triggerHour * 60 + rule.triggerMinute
+            print("TimeRuleService: Rule '\(rule.name)' triggers at \(rule.triggerHour):\(String(format: "%02d", rule.triggerMinute)) (\(ruleTriggerTimeInMinutes) minutes)")
             
             // Check if this rule's trigger time has passed today
             if ruleTriggerTimeInMinutes <= currentTimeInMinutes {
@@ -156,8 +165,15 @@ class TimeRuleService: TimeRuleServiceProtocol {
                 if ruleTriggerTimeInMinutes > latestTriggerTime {
                     latestTriggerTime = ruleTriggerTimeInMinutes
                     activeRule = rule
+                    print("TimeRuleService: Rule '\(rule.name)' is now the active candidate")
                 }
             }
+        }
+        
+        if let active = activeRule {
+            print("TimeRuleService: Active rule is '\(active.name)'")
+        } else {
+            print("TimeRuleService: No active rule (all rules trigger in the future)")
         }
         
         return activeRule
@@ -231,5 +247,73 @@ class TimeRuleService: TimeRuleServiceProtocol {
         }
         
         return nextRule
+    }
+}
+
+
+// MARK: - Mock TimeRuleService for Testing
+
+/// Mock implementation of TimeRuleServiceProtocol for testing
+class MockTimeRuleService: TimeRuleServiceProtocol {
+    
+    /// The storage service used for persisting rules
+    private let storageService: StorageServiceProtocol
+    
+    /// Mock active rule to return from getCurrentActiveRule
+    var mockActiveRule: TimeRule?
+    
+    /// Number of times getCurrentActiveRule was called
+    var getCurrentActiveRuleCallCount: Int = 0
+    
+    /// Number of times shouldApplyRule was called
+    var shouldApplyRuleCallCount: Int = 0
+    
+    /// Creates a new MockTimeRuleService instance
+    /// - Parameter storageService: The storage service to use for persistence
+    init(storageService: StorageServiceProtocol) {
+        self.storageService = storageService
+    }
+    
+    func getCurrentActiveRule() -> TimeRule? {
+        getCurrentActiveRuleCallCount += 1
+        return mockActiveRule
+    }
+    
+    func shouldApplyRule(at date: Date) -> TimeRule? {
+        shouldApplyRuleCallCount += 1
+        return mockActiveRule
+    }
+    
+    func addRule(_ rule: TimeRule) {
+        var rules = storageService.timeRules
+        rules.append(rule)
+        var mutableStorage = storageService
+        mutableStorage.timeRules = rules
+        mutableStorage.save()
+    }
+    
+    func updateRule(_ rule: TimeRule) {
+        var rules = storageService.timeRules
+        if let index = rules.firstIndex(where: { $0.id == rule.id }) {
+            rules[index] = rule
+            var mutableStorage = storageService
+            mutableStorage.timeRules = rules
+            mutableStorage.save()
+        }
+    }
+    
+    func deleteRule(_ rule: TimeRule) {
+        var rules = storageService.timeRules
+        rules.removeAll { $0.id == rule.id }
+        var mutableStorage = storageService
+        mutableStorage.timeRules = rules
+        mutableStorage.save()
+    }
+    
+    /// Resets all mock state
+    func reset() {
+        mockActiveRule = nil
+        getCurrentActiveRuleCallCount = 0
+        shouldApplyRuleCallCount = 0
     }
 }

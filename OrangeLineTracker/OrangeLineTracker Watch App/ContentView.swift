@@ -32,9 +32,9 @@ struct ContentView: View {
     
     init() {
         // Initialize ViewModels with default services
-        // Note: In production, the API key should be stored securely
+        // API key is loaded from centralized configuration
         let storageService = StorageService()
-        let vtaService = VTAService(apiKey: "YOUR_API_KEY")
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
         let timeRuleService = TimeRuleService(storageService: storageService)
         
         _metroViewModel = StateObject(wrappedValue: MetroViewModel(
@@ -1077,6 +1077,9 @@ struct TimeRuleEditView: View {
     /// Whether to show station picker
     @State private var showingStationPicker = false
     
+    /// Whether initial values have been loaded
+    @State private var hasLoadedInitialValues = false
+    
     /// Validation error message
     @State private var validationError: String?
     
@@ -1143,7 +1146,11 @@ struct TimeRuleEditView: View {
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                loadInitialValues()
+                // Only load initial values once to prevent resetting after navigation
+                if !hasLoadedInitialValues {
+                    loadInitialValues()
+                    hasLoadedInitialValues = true
+                }
             }
             .navigationDestination(isPresented: $showingStationPicker) {
                 StationSelectionViewInline(

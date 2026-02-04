@@ -60,6 +60,13 @@ class MetroViewModel: ObservableObject {
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
     
+    /// Timer for periodic time rule checking
+    /// Using nonisolated(unsafe) to allow access from deinit
+    private nonisolated(unsafe) var timeRuleCheckTimer: Timer?
+    
+    /// Last applied rule ID to avoid redundant applications
+    private var lastAppliedRuleId: UUID?
+    
     // MARK: - Initialization
     
     /// Creates a new MetroViewModel instance
@@ -81,6 +88,16 @@ class MetroViewModel: ObservableObject {
         
         // Apply time rule if needed
         applyTimeRuleIfNeeded()
+        
+        // Start periodic time rule checking
+        startTimeRuleCheckTimer()
+    }
+    
+    deinit {
+        // Directly invalidate timer here since deinit is nonisolated
+        // and cannot call @MainActor isolated methods
+        timeRuleCheckTimer?.invalidate()
+        timeRuleCheckTimer = nil
     }
     
     // MARK: - Public Methods
@@ -141,11 +158,14 @@ class MetroViewModel: ObservableObject {
         // Set loading state
         isLoading = true
         
+        // Get the correct station ID for the selected direction
+        let stationId = station.stationId(for: selectedDirection)
+        
         do {
             // Fetch predictions from VTA API
             // Validates: Requirements 3.1 - fetch real-time arrival prediction data
             let newPredictions = try await vtaService.fetchPredictions(
-                stationId: station.id,
+                stationId: stationId,
                 direction: selectedDirection
             )
             
@@ -177,13 +197,27 @@ class MetroViewModel: ObservableObject {
     /// Applies time rule if one is active and enabled
     /// - Validates: Requirements 8.3, 8.5, 8.6, 8.7
     func applyTimeRuleIfNeeded() {
+        print("MetroViewModel: Checking for active time rule...")
+        
         // Check if there's an active time rule
         guard let activeRule = timeRuleService.getCurrentActiveRule() else {
+            // No active rule, clear the last applied rule ID
+            print("MetroViewModel: No active time rule found")
+            lastAppliedRuleId = nil
+            return
+        }
+        
+        print("MetroViewModel: Found active rule '\(activeRule.name)' (id: \(activeRule.id))")
+        
+        // Skip if this rule was already applied (avoid redundant applications)
+        if lastAppliedRuleId == activeRule.id {
+            print("MetroViewModel: Rule '\(activeRule.name)' already applied, skipping")
             return
         }
         
         // Get the station for the rule
         guard let station = OrangeLineStations.station(byId: activeRule.stationId) else {
+            print("MetroViewModel: Could not find station for rule")
             return
         }
         
@@ -192,19 +226,72 @@ class MetroViewModel: ObservableObject {
         let stationChanged = selectedStation?.id != station.id
         let directionChanged = selectedDirection != activeRule.direction
         
+        print("MetroViewModel: Station changed: \(stationChanged), Direction changed: \(directionChanged)")
+        
         if stationChanged || directionChanged {
+            print("MetroViewModel: Applying rule '\(activeRule.name)' - Station: \(station.name), Direction: \(activeRule.direction)")
+            
             selectedStation = station
             selectedDirection = activeRule.direction
             
+            // Clear old predictions and widget data before fetching new data
+            predictions = []
+            cachedPredictions = []
+            
+            // Clear widget data to prevent showing stale data from old station
+            storageService.updateWidgetData(arrivalMinutes: nil)
+            
             // Save the new preferences
             savePreferences()
+            
+            // Record that this rule has been applied
+            lastAppliedRuleId = activeRule.id
+            
+            // Notify widget of the change immediately (will show no data until API returns)
+            WidgetCenter.shared.reloadAllTimelines()
             
             // Refresh predictions for the new settings
             // Validates: Requirements 8.5 - auto-refresh when time rule takes effect
             Task {
                 await refreshPredictions()
             }
+        } else {
+            // Even if no change needed, record the rule as applied
+            print("MetroViewModel: Rule '\(activeRule.name)' matches current settings, marking as applied")
+            lastAppliedRuleId = activeRule.id
         }
+    }
+    
+    // MARK: - Time Rule Timer
+    
+    /// Starts the periodic timer for checking time rules
+    /// Checks every minute to see if a new rule should be applied
+    private func startTimeRuleCheckTimer() {
+        // Stop any existing timer
+        stopTimeRuleCheckTimer()
+        
+        // Create a timer that fires every 60 seconds
+        timeRuleCheckTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.applyTimeRuleIfNeeded()
+            }
+        }
+        
+        // Add to run loop to ensure it fires even when scrolling
+        if let timer = timeRuleCheckTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+    
+    /// Stops the time rule check timer
+    private func stopTimeRuleCheckTimer() {
+        timeRuleCheckTimer?.invalidate()
+        timeRuleCheckTimer = nil
+    }
+    
+    /// Resets the last applied rule ID (call when user manually changes settings)
+    func resetLastAppliedRule() {
+        lastAppliedRuleId = nil
     }
     
     // MARK: - Private Methods

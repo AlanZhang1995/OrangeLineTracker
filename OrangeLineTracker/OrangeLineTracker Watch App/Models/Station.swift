@@ -8,10 +8,17 @@
 import Foundation
 
 /// Represents a VTA Orange Line station
+/// VTA uses different platform IDs for each direction at each station
 /// - Validates: Requirements 1.1, 1.3, 1.5
 struct Station: Identifiable, Codable, Equatable {
-    /// Station ID (511.org stop code)
-    let id: String
+    /// Unique identifier for the station (uses eastbound ID as primary)
+    var id: String { eastboundId }
+    
+    /// Station ID for Eastbound platform (towards Alum Rock)
+    let eastboundId: String
+    
+    /// Station ID for Westbound platform (towards Mountain View)
+    let westboundId: String
     
     /// Full station name
     let name: String
@@ -21,6 +28,18 @@ struct Station: Identifiable, Codable, Equatable {
     
     /// Sort order (geographic order from Mountain View to Alum Rock)
     let order: Int
+    
+    /// Returns the correct station ID for the given direction
+    /// - Parameter direction: The travel direction
+    /// - Returns: The platform ID for that direction
+    func stationId(for direction: Direction) -> String {
+        switch direction {
+        case .alumRock:
+            return eastboundId  // Eastbound platform for Alum Rock direction
+        case .mountainView:
+            return westboundId  // Westbound platform for Mountain View direction
+        }
+    }
 }
 
 /// Static data containing all VTA Orange Line stations
@@ -28,35 +47,36 @@ struct Station: Identifiable, Codable, Equatable {
 /// Station IDs are from 511.org SIRI API - each station has two platform IDs for different directions
 enum OrangeLineStations {
     /// All 28 Orange Line stations in geographic order (correct 511.org stop codes)
+    /// Each station has separate eastbound and westbound platform IDs
     static let stations: [Station] = [
-        Station(id: "64786", name: "Mountain View", shortName: "MTV", order: 0),
-        Station(id: "64819", name: "Whisman", shortName: "WSM", order: 1),
-        Station(id: "64789", name: "Middlefield", shortName: "MDF", order: 2),
-        Station(id: "64790", name: "Bayshore/NASA", shortName: "NASA", order: 3),
-        Station(id: "65024", name: "Moffett Park", shortName: "MFT", order: 4),
-        Station(id: "64791", name: "Lockheed Martin", shortName: "LMT", order: 5),
-        Station(id: "64815", name: "Borregas", shortName: "BRG", order: 6),
-        Station(id: "64814", name: "Crossman", shortName: "CRS", order: 7),
-        Station(id: "64813", name: "Fair Oaks", shortName: "FOK", order: 8),
-        Station(id: "64812", name: "Vienna", shortName: "VNA", order: 9),
-        Station(id: "64796", name: "Reamwood", shortName: "RWD", order: 10),
-        Station(id: "64797", name: "Old Ironsides", shortName: "OIS", order: 11),
-        Station(id: "64798", name: "Great America", shortName: "GAM", order: 12),
-        Station(id: "64808", name: "Lick Mill", shortName: "LML", order: 13),
-        Station(id: "64807", name: "Champion", shortName: "CHP", order: 14),
-        Station(id: "64801", name: "Baypointe", shortName: "BPT", order: 15),
-        Station(id: "64802", name: "Cisco Way", shortName: "CSC", order: 16),
-        Station(id: "64758", name: "River Oaks", shortName: "ROK", order: 17),
-        Station(id: "64762", name: "Tasman", shortName: "TSM", order: 18),
-        Station(id: "64764", name: "Orchard", shortName: "ORC", order: 19),
-        Station(id: "64803", name: "Alder", shortName: "ALD", order: 20),
-        Station(id: "65235", name: "Great Mall", shortName: "GML", order: 21),
-        Station(id: "65236", name: "Milpitas", shortName: "MLP", order: 22),
-        Station(id: "65237", name: "Cropley", shortName: "CRP", order: 23),
-        Station(id: "65238", name: "Hostetter", shortName: "HST", order: 24),
-        Station(id: "65239", name: "Berryessa", shortName: "BRY", order: 25),
-        Station(id: "65240", name: "Penitencia Creek", shortName: "PNC", order: 26),
-        Station(id: "65243", name: "Alum Rock", shortName: "ALR", order: 27)
+        Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0),
+        Station(eastboundId: "64788", westboundId: "64819", name: "Whisman", shortName: "WSM", order: 1),
+        Station(eastboundId: "64789", westboundId: "64818", name: "Middlefield", shortName: "MDF", order: 2),
+        Station(eastboundId: "64790", westboundId: "64817", name: "Bayshore/NASA", shortName: "NASA", order: 3),
+        Station(eastboundId: "65024", westboundId: "65025", name: "Moffett Park", shortName: "MFT", order: 4),
+        Station(eastboundId: "64791", westboundId: "64816", name: "Lockheed Martin", shortName: "LMT", order: 5),
+        Station(eastboundId: "64792", westboundId: "64815", name: "Borregas", shortName: "BRG", order: 6),
+        Station(eastboundId: "64793", westboundId: "64814", name: "Crossman", shortName: "CRS", order: 7),
+        Station(eastboundId: "64794", westboundId: "64813", name: "Fair Oaks", shortName: "FOK", order: 8),
+        Station(eastboundId: "64795", westboundId: "64812", name: "Vienna", shortName: "VNA", order: 9),
+        Station(eastboundId: "64796", westboundId: "64811", name: "Reamwood", shortName: "RWD", order: 10),
+        Station(eastboundId: "64797", westboundId: "64810", name: "Old Ironsides", shortName: "OIS", order: 11),
+        Station(eastboundId: "64798", westboundId: "64809", name: "Great America", shortName: "GAM", order: 12),
+        Station(eastboundId: "64799", westboundId: "64808", name: "Lick Mill", shortName: "LML", order: 13),
+        Station(eastboundId: "64800", westboundId: "64807", name: "Champion", shortName: "CHP", order: 14),
+        Station(eastboundId: "64801", westboundId: "64806", name: "Baypointe", shortName: "BPT", order: 15),
+        Station(eastboundId: "64802", westboundId: "64805", name: "Cisco Way", shortName: "CSC", order: 16),
+        Station(eastboundId: "64758", westboundId: "64759", name: "River Oaks", shortName: "ROK", order: 17),
+        Station(eastboundId: "64762", westboundId: "64763", name: "Tasman", shortName: "TSM", order: 18),
+        Station(eastboundId: "64764", westboundId: "64765", name: "Orchard", shortName: "ORC", order: 19),
+        Station(eastboundId: "64803", westboundId: "64804", name: "Alder", shortName: "ALD", order: 20),
+        Station(eastboundId: "65235", westboundId: "65250", name: "Great Mall", shortName: "GML", order: 21),
+        Station(eastboundId: "65236", westboundId: "65249", name: "Milpitas", shortName: "MLP", order: 22),
+        Station(eastboundId: "65237", westboundId: "65248", name: "Cropley", shortName: "CRP", order: 23),
+        Station(eastboundId: "65238", westboundId: "65247", name: "Hostetter", shortName: "HST", order: 24),
+        Station(eastboundId: "65239", westboundId: "65246", name: "Berryessa", shortName: "BRY", order: 25),
+        Station(eastboundId: "65240", westboundId: "65245", name: "Penitencia Creek", shortName: "PNC", order: 26),
+        Station(eastboundId: "65242", westboundId: "65243", name: "Alum Rock", shortName: "ALR", order: 27)
     ]
     
     /// Total number of stations on the Orange Line
@@ -64,11 +84,11 @@ enum OrangeLineStations {
         stations.count
     }
     
-    /// Find a station by its ID
+    /// Find a station by its ID (checks both eastbound and westbound IDs)
     /// - Parameter id: The station ID (511.org stop code)
     /// - Returns: The station if found, nil otherwise
     static func station(byId id: String) -> Station? {
-        stations.first { $0.id == id }
+        stations.first { $0.eastboundId == id || $0.westboundId == id }
     }
     
     /// Find a station by its order index

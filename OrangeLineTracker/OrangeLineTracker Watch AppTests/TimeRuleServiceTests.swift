@@ -17,9 +17,12 @@ class MockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var cachedArrivalMinutes: Int?
+    var lastUpdateTime: Date?
     
     var saveCallCount = 0
     var loadCallCount = 0
+    var updateWidgetDataCallCount = 0
     
     func save() {
         saveCallCount += 1
@@ -27,6 +30,12 @@ class MockStorageService: StorageServiceProtocol {
     
     func load() {
         loadCallCount += 1
+    }
+    
+    func updateWidgetData(arrivalMinutes: Int?) {
+        updateWidgetDataCallCount += 1
+        cachedArrivalMinutes = arrivalMinutes
+        lastUpdateTime = Date()
     }
 }
 

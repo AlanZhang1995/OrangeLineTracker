@@ -17,24 +17,26 @@ struct StationModelTests {
     
     @Test func stationHasRequiredProperties() {
         // Validates: Requirements 1.1, 1.5
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         
-        #expect(station.id == "70261")
+        #expect(station.id == "64786")  // id uses eastboundId
+        #expect(station.eastboundId == "64786")
+        #expect(station.westboundId == "64821")
         #expect(station.name == "Mountain View")
         #expect(station.shortName == "MTV")
         #expect(station.order == 0)
     }
     
     @Test func stationConformsToIdentifiable() {
-        // Station should use id as the identifier
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
-        #expect(station.id == "70261")
+        // Station should use eastboundId as the identifier
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
+        #expect(station.id == "64786")
     }
     
     @Test func stationConformsToEquatable() {
-        let station1 = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
-        let station2 = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
-        let station3 = Station(id: "70271", name: "Whisman", shortName: "WSM", order: 1)
+        let station1 = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
+        let station2 = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
+        let station3 = Station(eastboundId: "64788", westboundId: "64819", name: "Whisman", shortName: "WSM", order: 1)
         
         #expect(station1 == station2)
         #expect(station1 != station3)
@@ -42,7 +44,7 @@ struct StationModelTests {
     
     @Test func stationConformsToCodable() throws {
         // Test encoding and decoding
-        let station = Station(id: "70261", name: "Mountain View", shortName: "MTV", order: 0)
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
         
         let encoder = JSONEncoder()
         let data = try encoder.encode(station)
@@ -52,16 +54,27 @@ struct StationModelTests {
         
         #expect(decodedStation == station)
     }
+    
+    @Test func stationIdForDirectionReturnsCorrectId() {
+        let station = Station(eastboundId: "64786", westboundId: "64821", name: "Mountain View", shortName: "MTV", order: 0)
+        
+        // Eastbound (Alum Rock direction) should return eastboundId
+        #expect(station.stationId(for: .alumRock) == "64786")
+        
+        // Westbound (Mountain View direction) should return westboundId
+        #expect(station.stationId(for: .mountainView) == "64821")
+    }
+    }
 }
 
 // MARK: - OrangeLineStations Tests
 
 struct OrangeLineStationsTests {
     
-    @Test func orangeLineHas29Stations() {
+    @Test func orangeLineHas28Stations() {
         // Validates: Requirements 1.1 - display all Orange Line stations
-        #expect(OrangeLineStations.stations.count == 29)
-        #expect(OrangeLineStations.count == 29)
+        #expect(OrangeLineStations.stations.count == 28)
+        #expect(OrangeLineStations.count == 28)
     }
     
     @Test func stationsAreOrderedGeographically() {
@@ -74,7 +87,7 @@ struct OrangeLineStationsTests {
         
         // Last station should be Alum Rock
         #expect(stations.last?.name == "Alum Rock")
-        #expect(stations.last?.order == 28)
+        #expect(stations.last?.order == 27)
     }
     
     @Test func stationsHaveConsecutiveOrderValues() {
@@ -86,11 +99,18 @@ struct OrangeLineStationsTests {
         }
     }
     
-    @Test func allStationsHaveUniqueIds() {
+    @Test func allStationsHaveUniqueEastboundIds() {
         let stations = OrangeLineStations.stations
-        let ids = Set(stations.map { $0.id })
+        let ids = Set(stations.map { $0.eastboundId })
         
-        #expect(ids.count == stations.count, "All station IDs should be unique")
+        #expect(ids.count == stations.count, "All station eastbound IDs should be unique")
+    }
+    
+    @Test func allStationsHaveUniqueWestboundIds() {
+        let stations = OrangeLineStations.stations
+        let ids = Set(stations.map { $0.westboundId })
+        
+        #expect(ids.count == stations.count, "All station westbound IDs should be unique")
     }
     
     @Test func allStationsHaveUniqueShortNames() {
@@ -110,10 +130,16 @@ struct OrangeLineStationsTests {
     }
     
     @Test func stationByIdFindsCorrectStation() {
-        let station = OrangeLineStations.station(byId: "70261")
+        // Should find station by eastbound ID
+        let station = OrangeLineStations.station(byId: "64786")
         
         #expect(station != nil)
         #expect(station?.name == "Mountain View")
+        
+        // Should also find station by westbound ID
+        let stationByWestbound = OrangeLineStations.station(byId: "64821")
+        #expect(stationByWestbound != nil)
+        #expect(stationByWestbound?.name == "Mountain View")
     }
     
     @Test func stationByIdReturnsNilForInvalidId() {
@@ -128,7 +154,7 @@ struct OrangeLineStationsTests {
         #expect(station != nil)
         #expect(station?.name == "Mountain View")
         
-        let lastStation = OrangeLineStations.station(byOrder: 28)
+        let lastStation = OrangeLineStations.station(byOrder: 27)
         #expect(lastStation?.name == "Alum Rock")
     }
     
@@ -149,19 +175,22 @@ struct OrangeLineStationsTests {
         
         // Mountain View (first)
         let mtv = stations[0]
-        #expect(mtv.id == "70261")
+        #expect(mtv.eastboundId == "64786")
+        #expect(mtv.westboundId == "64821")
         #expect(mtv.name == "Mountain View")
         #expect(mtv.shortName == "MTV")
         
         // Great America (middle)
         let gam = stations[12]
-        #expect(gam.id == "70381")
+        #expect(gam.eastboundId == "64798")
+        #expect(gam.westboundId == "64809")
         #expect(gam.name == "Great America")
         #expect(gam.shortName == "GAM")
         
         // Alum Rock (last)
-        let alr = stations[28]
-        #expect(alr.id == "70541")
+        let alr = stations[27]
+        #expect(alr.eastboundId == "65242")
+        #expect(alr.westboundId == "65243")
         #expect(alr.name == "Alum Rock")
         #expect(alr.shortName == "ALR")
     }
@@ -212,16 +241,16 @@ struct DirectionEnumTests {
     
     // MARK: - Direction ID Tests
     
-    @Test func directionIdReturnsIBForMountainView() {
-        // Mountain View direction is Inbound (IB)
+    @Test func directionIdReturnsWForMountainView() {
+        // Mountain View direction is Westbound (W)
         let direction = Direction.mountainView
-        #expect(direction.directionId == "IB")
+        #expect(direction.directionId == "W")
     }
     
-    @Test func directionIdReturnsOBForAlumRock() {
-        // Alum Rock direction is Outbound (OB)
+    @Test func directionIdReturnsEForAlumRock() {
+        // Alum Rock direction is Eastbound (E)
         let direction = Direction.alumRock
-        #expect(direction.directionId == "OB")
+        #expect(direction.directionId == "E")
     }
     
     @Test func directionIdsAreUnique() {

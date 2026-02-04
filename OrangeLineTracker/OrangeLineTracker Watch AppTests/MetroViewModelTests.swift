@@ -16,9 +16,12 @@ class ViewModelMockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var cachedArrivalMinutes: Int?
+    var lastUpdateTime: Date?
     
     var saveCallCount = 0
     var loadCallCount = 0
+    var updateWidgetDataCallCount = 0
     
     func save() {
         saveCallCount += 1
@@ -28,13 +31,22 @@ class ViewModelMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
+    func updateWidgetData(arrivalMinutes: Int?) {
+        updateWidgetDataCallCount += 1
+        cachedArrivalMinutes = arrivalMinutes
+        lastUpdateTime = Date()
+    }
+    
     func reset() {
         selectedStation = nil
         selectedDirection = nil
         timeRules = []
         isTimeRuleEnabled = false
+        cachedArrivalMinutes = nil
+        lastUpdateTime = nil
         saveCallCount = 0
         loadCallCount = 0
+        updateWidgetDataCallCount = 0
     }
 }
 
@@ -361,7 +373,8 @@ struct MetroViewModelRefreshPredictionsTests {
         
         await viewModel.refreshPredictions()
         
-        #expect(mockVTAService.lastRequestedStationId == station.id)
+        // Station ID should be the westbound ID since direction is mountainView
+        #expect(mockVTAService.lastRequestedStationId == station.stationId(for: .mountainView))
         #expect(mockVTAService.lastRequestedDirection == .mountainView)
     }
 }

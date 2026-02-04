@@ -119,10 +119,12 @@ class StorageService: StorageServiceProtocol {
             // Also save to shared defaults for widget
             sharedDefaults?.set(station.name, forKey: StorageKeys.selectedStationName)
             sharedDefaults?.set(station.shortName, forKey: StorageKeys.selectedStationShortName)
+            print("StorageService: 💾 Saved station to widget: \(station.name) (\(station.shortName))")
         } else {
             userDefaults.removeObject(forKey: StorageKeys.selectedStationId)
             sharedDefaults?.removeObject(forKey: StorageKeys.selectedStationName)
             sharedDefaults?.removeObject(forKey: StorageKeys.selectedStationShortName)
+            print("StorageService: 💾 Cleared station from widget")
         }
         
         // Save selected direction
@@ -130,10 +132,17 @@ class StorageService: StorageServiceProtocol {
             userDefaults.set(direction.rawValue, forKey: StorageKeys.selectedDirection)
             // Also save to shared defaults for widget
             sharedDefaults?.set(direction.rawValue, forKey: StorageKeys.selectedDirection)
+            print("StorageService: 💾 Saved direction to widget: \(direction.rawValue)")
         } else {
             userDefaults.removeObject(forKey: StorageKeys.selectedDirection)
             sharedDefaults?.removeObject(forKey: StorageKeys.selectedDirection)
+            print("StorageService: 💾 Cleared direction from widget")
         }
+        
+        // Clear cached arrival data when station/direction changes
+        // This forces widget to show new station info immediately
+        sharedDefaults?.removeObject(forKey: StorageKeys.cachedArrivalMinutes)
+        sharedDefaults?.removeObject(forKey: StorageKeys.arrivalTimestamp)
         
         // Save time rules
         if let encodedRules = try? JSONEncoder().encode(timeRules) {

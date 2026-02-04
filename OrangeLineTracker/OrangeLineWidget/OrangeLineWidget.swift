@@ -80,6 +80,7 @@ struct OrangeLineProvider: TimelineProvider {
         let now = Date()
         
         guard let defaults = sharedDefaults else {
+            print("Widget: ❌ No shared defaults available")
             let entry = OrangeLineEntry.noData
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 2, to: now) ?? now
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
@@ -91,8 +92,15 @@ struct OrangeLineProvider: TimelineProvider {
         let timeRules = loadTimeRules(from: defaults)
         let isTimeRuleEnabled = defaults.bool(forKey: WidgetStorageKeys.isTimeRuleEnabled)
         
+        print("Widget: 🔄 Timeline refresh - TimeRules enabled: \(isTimeRuleEnabled), rules count: \(timeRules.count)")
+        
         // 获取当前活跃的规则（基于当前时间）
         let activeRule = isTimeRuleEnabled ? findActiveRule(rules: timeRules, at: now) : nil
+        if let rule = activeRule {
+            print("Widget: ⏰ Active time rule: \(rule.name) -> \(rule.stationName)")
+        } else {
+            print("Widget: ⏰ No active time rule")
+        }
         
         // 确定当前应该显示的站点信息
         let currentStationInfo = getStationInfo(defaults: defaults, activeRule: activeRule)
@@ -246,6 +254,7 @@ struct OrangeLineProvider: TimelineProvider {
     /// 获取站点信息（考虑时间规则）
     private func getStationInfo(defaults: UserDefaults, activeRule: WidgetTimeRule?) -> StationInfo {
         if let rule = activeRule {
+            print("Widget: 📍 Using time rule station: \(rule.stationName)")
             return getStationInfoFromRule(rule)
         }
         
@@ -253,6 +262,8 @@ struct OrangeLineProvider: TimelineProvider {
         let name = defaults.string(forKey: WidgetStorageKeys.selectedStationName) ?? "--"
         let shortName = defaults.string(forKey: WidgetStorageKeys.selectedStationShortName) ?? "--"
         let direction = defaults.string(forKey: WidgetStorageKeys.selectedDirection) ?? "--"
+        
+        print("Widget: 📍 Using saved station: \(name) (\(shortName)) direction: \(direction)")
         
         return StationInfo(name: name, shortName: shortName, direction: direction)
     }

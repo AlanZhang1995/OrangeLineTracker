@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: - ContentView
 
@@ -111,9 +112,20 @@ enum Tab: Int, CaseIterable {
 
 /// View for displaying arrival times with large font display
 /// Implements pull-to-refresh, loading indicators, and error states
+/// Uses Timer for real-time countdown updates and auto-refresh
 /// - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.3, 6.1, 6.4, 6.5
 struct ArrivalView: View {
     @ObservedObject var viewModel: MetroViewModel
+    
+    /// Current time for countdown calculation, triggers view refresh
+    @State private var currentTime = Date()
+    
+    /// Timer publisher for countdown updates (every 20 seconds)
+    /// Also handles auto-refresh check every 60 seconds
+    private let countdownTimer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
+    
+    /// Track last refresh time to ensure refresh happens
+    @State private var lastRefreshTime = Date()
     
     var body: some View {
         ScrollView {
@@ -124,8 +136,8 @@ struct ArrivalView: View {
                 Divider()
                     .background(Color.orange.opacity(0.3))
                 
-                // Main content area
-                mainContent
+                // Main content area with current time
+                mainContent(currentTime: currentTime)
                 
                 // Cached data indicator - Validates: Requirement 5.5
                 if viewModel.isShowingCachedData {
@@ -150,10 +162,31 @@ struct ArrivalView: View {
         }
         .navigationTitle("到站时间")
         .onAppear {
+            // Reset current time and last refresh time when view appears
+            currentTime = Date()
+            lastRefreshTime = Date()
+            
             // Auto-refresh when view appears if we have a station selected
             if viewModel.selectedStation != nil && viewModel.predictions.isEmpty && !viewModel.isLoading {
                 Task {
                     await viewModel.refreshPredictions()
+                }
+            }
+        }
+        // Update currentTime every 10 seconds to refresh countdown display
+        // Also check if we need to refresh API data (every 60 seconds)
+        .onReceive(countdownTimer) { newTime in
+            currentTime = newTime
+            
+            // Check if 60 seconds have passed since last refresh
+            let timeSinceLastRefresh = newTime.timeIntervalSince(lastRefreshTime)
+            if timeSinceLastRefresh >= 60 {
+                if viewModel.selectedStation != nil && !viewModel.isLoading {
+                    print("ArrivalView: 🔄 Auto-refreshing predictions (last refresh: \(Int(timeSinceLastRefresh))s ago)...")
+                    lastRefreshTime = newTime
+                    Task {
+                        await viewModel.refreshPredictions()
+                    }
                 }
             }
         }
@@ -199,8 +232,9 @@ struct ArrivalView: View {
     // MARK: - Main Content
     
     /// Main content area showing loading, error, arrival time, or no data state
+    /// - Parameter currentTime: Current time for real-time countdown calculation
     @ViewBuilder
-    private var mainContent: some View {
+    private func mainContent(currentTime: Date) -> some View {
         // Loading indicator - Validates: Requirement 6.4
         if viewModel.isLoading {
             loadingView
@@ -209,7 +243,7 @@ struct ArrivalView: View {
         else if let errorMessage = viewModel.errorMessage {
             if viewModel.isShowingCachedData, let prediction = viewModel.nextPrediction {
                 // Show cached prediction with error indicator
-                arrivalTimeView(prediction: prediction, isCached: true)
+                arrivalTimeView(prediction: prediction, isCached: true, currentTime: currentTime)
             } else {
                 // Show error state
                 errorView(message: errorMessage)
@@ -217,7 +251,7 @@ struct ArrivalView: View {
         }
         // Arrival time display - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 6.1
         else if let prediction = viewModel.nextPrediction {
-            arrivalTimeView(prediction: prediction, isCached: false)
+            arrivalTimeView(prediction: prediction, isCached: false, currentTime: currentTime)
         }
         // No data - Validates: Requirement 5.3
         else if viewModel.selectedStation != nil {
@@ -244,15 +278,16 @@ struct ArrivalView: View {
     
     // MARK: - Arrival Time View
     
-    /// Large font arrival time display
+    /// Large font arrival time display with real-time countdown
     /// - Parameters:
     ///   - prediction: The prediction to display
     ///   - isCached: Whether this is cached data
+    ///   - currentTime: Current time for countdown calculation
     /// - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 6.1
-    private func arrivalTimeView(prediction: Prediction, isCached: Bool) -> some View {
+    private func arrivalTimeView(prediction: Prediction, isCached: Bool, currentTime: Date) -> some View {
         VStack(spacing: 8) {
-            // Large font arrival time - Validates: Requirement 6.1 (48pt+ font)
-            Text(prediction.arrivalTimeDisplay)
+            // Large font arrival time with real-time countdown - Validates: Requirement 6.1 (48pt+ font)
+            Text(prediction.arrivalTimeDisplay(at: currentTime))
                 .font(.system(size: 48, weight: .bold, design: .rounded))
                 .foregroundColor(isCached ? .orange.opacity(0.7) : .orange)
                 .lineLimit(1)
@@ -260,7 +295,7 @@ struct ArrivalView: View {
             
             // Show additional predictions if available
             if viewModel.predictions.count > 1 {
-                additionalPredictionsView
+                additionalPredictionsView(currentTime: currentTime)
             }
         }
         .padding(.vertical, 8)
@@ -268,8 +303,9 @@ struct ArrivalView: View {
     
     // MARK: - Additional Predictions View
     
-    /// Shows the next few predictions after the first one
-    private var additionalPredictionsView: some View {
+    /// Shows the next few predictions after the first one with real-time countdown
+    /// - Parameter currentTime: Current time for countdown calculation
+    private func additionalPredictionsView(currentTime: Date) -> some View {
         VStack(spacing: 4) {
             Divider()
                 .background(Color.secondary.opacity(0.3))
@@ -281,7 +317,7 @@ struct ArrivalView: View {
             
             ForEach(Array(viewModel.predictions.dropFirst().prefix(2))) { prediction in
                 HStack {
-                    Text(prediction.arrivalTimeDisplay)
+                    Text(prediction.arrivalTimeDisplay(at: currentTime))
                         .font(.caption)
                         .foregroundColor(.orange.opacity(0.8))
                     

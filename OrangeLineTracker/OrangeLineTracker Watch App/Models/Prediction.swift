@@ -57,7 +57,7 @@ struct Prediction: Identifiable, Codable, Equatable {
     /// Unique identifier for this prediction
     let id: UUID
     
-    /// Minutes until the train arrives at the station
+    /// Minutes until the train arrives at the station (at the time of API fetch)
     /// - nil indicates the train is arriving now (即将到站)
     let minutesUntilArrival: Int?
     
@@ -97,16 +97,36 @@ struct Prediction: Identifiable, Codable, Equatable {
         self.timestamp = timestamp
     }
     
-    /// Formatted display string for arrival time
+    /// Calculates the current minutes until arrival based on elapsed time since fetch
+    /// - Parameter currentTime: The current time to calculate against (defaults to now)
+    /// - Returns: The adjusted minutes until arrival, accounting for time elapsed since API fetch
+    func currentMinutesUntilArrival(at currentTime: Date = Date()) -> Int? {
+        guard let originalMinutes = minutesUntilArrival else {
+            return nil
+        }
+        
+        // Calculate how many minutes have passed since the prediction was fetched
+        let elapsedSeconds = currentTime.timeIntervalSince(timestamp)
+        let elapsedMinutes = Int(elapsedSeconds / 60)
+        
+        // Subtract elapsed time from original prediction
+        let adjustedMinutes = originalMinutes - elapsedMinutes
+        
+        // Don't return negative values
+        return max(0, adjustedMinutes)
+    }
+    
+    /// Formatted display string for arrival time (real-time countdown)
+    /// - Parameter currentTime: The current time to calculate against (defaults to now)
     /// - Returns: A string like "3 分钟", "即将到站", or "进站中"
-    var arrivalTimeDisplay: String {
+    func arrivalTimeDisplay(at currentTime: Date = Date()) -> String {
         switch arrivalStatus {
         case .arriving:
             return ArrivalStatus.arriving.displayText
         case .boarding:
             return ArrivalStatus.boarding.displayText
         case .scheduled, .delayed:
-            if let minutes = minutesUntilArrival {
+            if let minutes = currentMinutesUntilArrival(at: currentTime) {
                 if minutes <= 0 {
                     return ArrivalStatus.arriving.displayText
                 }
@@ -116,16 +136,17 @@ struct Prediction: Identifiable, Codable, Equatable {
         }
     }
     
-    /// Formatted display string for arrival time in English
+    /// Formatted display string for arrival time in English (real-time countdown)
+    /// - Parameter currentTime: The current time to calculate against (defaults to now)
     /// - Returns: A string like "3 min", "Arriving", or "Boarding"
-    var arrivalTimeDisplayEnglish: String {
+    func arrivalTimeDisplayEnglish(at currentTime: Date = Date()) -> String {
         switch arrivalStatus {
         case .arriving:
             return ArrivalStatus.arriving.displayTextEnglish
         case .boarding:
             return ArrivalStatus.boarding.displayTextEnglish
         case .scheduled, .delayed:
-            if let minutes = minutesUntilArrival {
+            if let minutes = currentMinutesUntilArrival(at: currentTime) {
                 if minutes <= 0 {
                     return ArrivalStatus.arriving.displayTextEnglish
                 }
@@ -135,16 +156,38 @@ struct Prediction: Identifiable, Codable, Equatable {
         }
     }
     
-    /// Full display text including destination
-    /// - Returns: A string like "3 分钟 → Alum Rock"
-    var fullDisplayText: String {
-        "\(arrivalTimeDisplay) → \(destination)"
+    /// Static display string (for backward compatibility, uses original fetch time)
+    var arrivalTimeDisplay: String {
+        arrivalTimeDisplay(at: timestamp)
     }
     
-    /// Full display text in English including destination
+    /// Static display string in English (for backward compatibility)
+    var arrivalTimeDisplayEnglish: String {
+        arrivalTimeDisplayEnglish(at: timestamp)
+    }
+    
+    /// Full display text including destination (real-time countdown)
+    /// - Parameter currentTime: The current time to calculate against (defaults to now)
+    /// - Returns: A string like "3 分钟 → Alum Rock"
+    func fullDisplayText(at currentTime: Date = Date()) -> String {
+        "\(arrivalTimeDisplay(at: currentTime)) → \(destination)"
+    }
+    
+    /// Full display text in English including destination (real-time countdown)
+    /// - Parameter currentTime: The current time to calculate against (defaults to now)
     /// - Returns: A string like "3 min → Alum Rock"
+    func fullDisplayTextEnglish(at currentTime: Date = Date()) -> String {
+        "\(arrivalTimeDisplayEnglish(at: currentTime)) → \(destination)"
+    }
+    
+    /// Static full display text (for backward compatibility)
+    var fullDisplayText: String {
+        fullDisplayText(at: timestamp)
+    }
+    
+    /// Static full display text in English (for backward compatibility)
     var fullDisplayTextEnglish: String {
-        "\(arrivalTimeDisplayEnglish) → \(destination)"
+        fullDisplayTextEnglish(at: timestamp)
     }
     
     /// Checks if the prediction data is stale (older than 2 minutes)

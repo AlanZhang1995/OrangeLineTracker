@@ -265,9 +265,9 @@ extension Direction {
     var shortDisplayName: String {
         switch self {
         case .mountainView:
-            return "Mountain View"
+            return "MTV"
         case .alumRock:
-            return "Alum Rock"
+            return "ALR"
         }
     }
 }

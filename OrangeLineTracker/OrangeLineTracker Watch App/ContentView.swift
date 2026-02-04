@@ -248,7 +248,7 @@ struct ArrivalView: View {
     /// - Parameters:
     ///   - prediction: The prediction to display
     ///   - isCached: Whether this is cached data
-    /// - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 6.1
+    /// - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 6.1
     private func arrivalTimeView(prediction: Prediction, isCached: Bool) -> some View {
         VStack(spacing: 8) {
             // Large font arrival time - Validates: Requirement 6.1 (48pt+ font)
@@ -257,15 +257,6 @@ struct ArrivalView: View {
                 .foregroundColor(isCached ? .orange.opacity(0.7) : .orange)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            
-            // Destination information - Validates: Requirement 4.5
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.caption)
-                Text(prediction.destination)
-                    .font(.body)
-            }
-            .foregroundColor(.secondary)
             
             // Show additional predictions if available
             if viewModel.predictions.count > 1 {
@@ -389,108 +380,92 @@ struct ArrivalView: View {
 // MARK: - StationPickerView
 
 /// View for selecting a station from the Orange Line
-/// Displays all 29 stations in geographic order with Digital Crown scrolling support
+/// Uses a compact Picker menu instead of full list for better usability
 /// - Validates: Requirements 1.1, 1.2, 1.3, 1.5, 6.2
 struct StationPickerView: View {
     @ObservedObject var viewModel: MetroViewModel
     
-    /// Namespace for scroll animation
-    @Namespace private var scrollNamespace
-    
     var body: some View {
-        // List supports Digital Crown scrolling automatically - Validates: Requirement 6.2
-        ScrollViewReader { proxy in
-            List {
-                // Header section showing current selection
-                if let selectedStation = viewModel.selectedStation {
-                    Section {
-                        currentSelectionHeader(station: selectedStation)
-                    }
+        ScrollView {
+            VStack(spacing: 16) {
+                // Header with current selection
+                VStack(spacing: 8) {
+                    Image(systemName: "tram.fill")
+                        .font(.title2)
+                        .foregroundColor(.orange)
+                    
+                    Text("选择站点")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text("橙线 \(OrangeLineStations.count) 站")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
+                .padding(.top, 8)
                 
-                // Station list section
-                // Validates: Requirement 1.1 - Display all Orange Line stations
-                // Validates: Requirement 1.3 - Stations ordered geographically (by order field)
-                Section(header: stationListHeader) {
+                Divider()
+                    .background(Color.orange.opacity(0.3))
+                
+                // Station picker menu
+                // Validates: Requirements 1.1, 1.2, 1.3
+                Picker("站点", selection: Binding(
+                    get: { viewModel.selectedStation?.id ?? OrangeLineStations.first.id },
+                    set: { newId in
+                        if let station = OrangeLineStations.station(byId: newId) {
+                            viewModel.selectStation(station)
+                        }
+                    }
+                )) {
                     ForEach(OrangeLineStations.stations) { station in
-                        StationRowView(
-                            station: station,
-                            isSelected: viewModel.selectedStation?.id == station.id,
-                            onSelect: {
-                                // Validates: Requirement 1.2 - Set selected station on tap
-                                viewModel.selectStation(station)
-                            }
-                        )
-                        .id(station.id)
+                        Text(station.name)
+                            .tag(station.id)
                     }
                 }
-            }
-            .listStyle(.carousel) // Better for watchOS with Digital Crown
-            .navigationTitle("选择站点")
-            .onAppear {
-                // Scroll to selected station when view appears
-                if let selectedId = viewModel.selectedStation?.id {
-                    withAnimation {
-                        proxy.scrollTo(selectedId, anchor: .center)
-                    }
-                }
-            }
-        }
-    }
-    
-    // MARK: - Current Selection Header
-    
-    /// Displays the currently selected station at the top
-    @ViewBuilder
-    private func currentSelectionHeader(station: Station) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.orange)
-                .font(.title3)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text("当前选择")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                .pickerStyle(.navigationLink)
+                .tint(.orange)
                 
-                Text(station.name)
-                    .font(.headline)
-                    .foregroundColor(.orange)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                // Current selection display
+                if let station = viewModel.selectedStation {
+                    VStack(spacing: 8) {
+                        Divider()
+                            .background(Color.orange.opacity(0.3))
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.orange)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("已选择")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(station.name)
+                                    .font(.body)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.orange)
+                            }
+                            
+                            Spacer()
+                            
+                            Text(station.shortName)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.orange)
+                                )
+                        }
+                    }
+                    .padding(.top, 8)
+                }
             }
-            
-            Spacer()
-            
-            // Station short name badge
-            Text(station.shortName)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    Capsule()
-                        .fill(Color.orange)
-                )
+            .padding()
         }
-        .padding(.vertical, 4)
-    }
-    
-    // MARK: - Station List Header
-    
-    /// Header for the station list section
-    private var stationListHeader: some View {
-        HStack {
-            Image(systemName: "tram.fill")
-                .foregroundColor(.orange)
-            Text("橙线站点")
-                .foregroundColor(.secondary)
-            Spacer()
-            Text("\(OrangeLineStations.count) 站")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
+        .navigationTitle("选择站点")
     }
 }
 

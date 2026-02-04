@@ -31,12 +31,16 @@ class BackgroundRefreshManager {
     /// 智能刷新间隔配置（基于 15 分钟一班车的频率）
     /// - ≤ 5 分钟到站 → 1 分钟刷新（关键时刻，确保不错过车）
     /// - 6-10 分钟到站 → 3 分钟刷新
-    /// - > 10 分钟到站 → 5 分钟刷新
+    /// - 11-15 分钟到站 → 5 分钟刷新
+    /// - 16-20 分钟到站 → 8 分钟刷新
+    /// - > 20 分钟到站 → 12 分钟刷新
     /// - 无数据/错误 → 3 分钟刷新（恢复模式）
-    private static let criticalRefreshInterval: TimeInterval = 60      // 1 min (≤5 min arrival)
-    private static let nearRefreshInterval: TimeInterval = 3 * 60      // 3 min (6-10 min arrival)
-    private static let farRefreshInterval: TimeInterval = 5 * 60       // 5 min (>10 min arrival)
-    private static let recoveryRefreshInterval: TimeInterval = 3 * 60  // 3 min (no data/error)
+    private static let criticalRefreshInterval: TimeInterval = 60       // 1 min (≤5 min arrival)
+    private static let nearRefreshInterval: TimeInterval = 3 * 60       // 3 min (6-10 min arrival)
+    private static let mediumRefreshInterval: TimeInterval = 5 * 60     // 5 min (11-15 min arrival)
+    private static let farRefreshInterval: TimeInterval = 8 * 60        // 8 min (16-20 min arrival)
+    private static let veryFarRefreshInterval: TimeInterval = 12 * 60   // 12 min (>20 min arrival)
+    private static let recoveryRefreshInterval: TimeInterval = 3 * 60   // 3 min (no data/error)
     
     // MARK: - Properties
     
@@ -169,10 +173,18 @@ class BackgroundRefreshManager {
             // 临近：6-10 分钟到站，3 分钟刷新
             interval = Self.nearRefreshInterval
             description = "near (6-10 min arrival)"
-        default:
-            // 较远：> 10 分钟到站，5 分钟刷新
+        case 11...15:
+            // 中等：11-15 分钟到站，5 分钟刷新
+            interval = Self.mediumRefreshInterval
+            description = "medium (11-15 min arrival)"
+        case 16...20:
+            // 较远：16-20 分钟到站，8 分钟刷新
             interval = Self.farRefreshInterval
-            description = "far (>10 min arrival)"
+            description = "far (16-20 min arrival)"
+        default:
+            // 很远：> 20 分钟到站，12 分钟刷新
+            interval = Self.veryFarRefreshInterval
+            description = "very far (>20 min arrival)"
         }
         
         print("BackgroundRefreshManager: Smart refresh interval = \(Int(interval/60)) min (\(description))")

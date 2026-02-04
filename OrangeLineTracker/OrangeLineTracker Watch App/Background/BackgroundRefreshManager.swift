@@ -42,6 +42,14 @@ class BackgroundRefreshManager {
     private static let veryFarRefreshInterval: TimeInterval = 12 * 60   // 12 min (>20 min arrival)
     private static let recoveryRefreshInterval: TimeInterval = 3 * 60   // 3 min (no data/error)
     
+    // MARK: - Service Hours (VTA Orange Line)
+    
+    /// 运营时间配置
+    /// VTA Orange Line 运营时间约为 6:00 AM - 11:00 PM
+    /// 夜间停运时段（11pm-6am）不刷新，节省电量
+    private static let serviceStartHour = 6   // 6:00 AM
+    private static let serviceEndHour = 23    // 11:00 PM
+    
     // MARK: - Properties
     
     /// Shared instance for singleton access
@@ -129,6 +137,14 @@ class BackgroundRefreshManager {
     private func calculateNextRefreshDate() -> Date {
         let now = Date()
         
+        // 检查是否在夜间停运时段
+        if isOutsideServiceHours(now) {
+            // 计算下一个运营开始时间
+            let nextServiceStart = calculateNextServiceStartTime(from: now)
+            print("BackgroundRefreshManager: Outside service hours, scheduling for \(nextServiceStart)")
+            return nextServiceStart
+        }
+        
         // 计算智能刷新间隔
         let smartInterval = calculateSmartRefreshInterval(arrivalMinutes: lastKnownArrivalMinutes)
         
@@ -148,6 +164,46 @@ class BackgroundRefreshManager {
         
         // Schedule for the effective interval from now
         return now.addingTimeInterval(effectiveInterval)
+    }
+    
+    // MARK: - Service Hours Check
+    
+    /// 检查当前时间是否在停运时段（11pm-6am）
+    /// - Parameter date: 要检查的时间
+    /// - Returns: true 表示在停运时段
+    func isOutsideServiceHours(_ date: Date = Date()) -> Bool {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        
+        // 停运时段：23:00 (11pm) - 05:59 (6am前)
+        // 即 hour >= 23 或 hour < 6
+        return hour >= Self.serviceEndHour || hour < Self.serviceStartHour
+    }
+    
+    /// 计算下一个运营开始时间
+    /// - Parameter from: 起始时间
+    /// - Returns: 下一个 6:00 AM
+    private func calculateNextServiceStartTime(from date: Date) -> Date {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+        components.hour = Self.serviceStartHour
+        components.minute = 0
+        components.second = 0
+        
+        // 如果当前时间已经过了今天的运营开始时间（即在 23:00-23:59），
+        // 则下一个运营开始时间是明天 6:00
+        if hour >= Self.serviceEndHour {
+            if let tomorrow = calendar.date(byAdding: .day, value: 1, to: date) {
+                components = calendar.dateComponents([.year, .month, .day], from: tomorrow)
+                components.hour = Self.serviceStartHour
+                components.minute = 0
+                components.second = 0
+            }
+        }
+        
+        return calendar.date(from: components) ?? date.addingTimeInterval(3600)
     }
     
     /// 根据到站时间计算智能刷新间隔
@@ -254,6 +310,26 @@ class BackgroundRefreshManager {
     /// Fetches new predictions and updates the complication
     private func performBackgroundDataRefresh() async {
         print("BackgroundRefreshManager: Starting background data refresh")
+        
+        // 检查是否在停运时段
+        if isOutsideServiceHours() {
+            print("BackgroundRefreshManager: Outside service hours (11pm-6am), skipping refresh")
+            // 更新 Widget 显示停运状态
+            var mutableStorage = storageService
+            mutableStorage.load()
+            mutableStorage.updateWidgetData(arrivalMinutes: nil)
+            WidgetCenter.shared.reloadAllTimelines()
+            
+            // 更新 Complication 显示停运状态
+            if let station = storageService.selectedStation,
+               let direction = storageService.selectedDirection {
+                updateComplicationData(ComplicationData.errorState(
+                    stationShortName: station.shortName,
+                    direction: direction
+                ))
+            }
+            return
+        }
         
         // Load user preferences
         var mutableStorage = storageService

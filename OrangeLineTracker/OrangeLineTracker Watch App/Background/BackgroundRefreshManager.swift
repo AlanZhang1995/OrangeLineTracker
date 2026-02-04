@@ -45,10 +45,10 @@ class BackgroundRefreshManager {
     // MARK: - Service Hours (VTA Orange Line)
     
     /// 运营时间配置
-    /// VTA Orange Line 运营时间约为 6:00 AM - 11:00 PM
-    /// 夜间停运时段（11pm-6am）不刷新，节省电量
-    private static let serviceStartHour = 6   // 6:00 AM
-    private static let serviceEndHour = 23    // 11:00 PM
+    /// VTA Orange Line 运营时间约为 7:00 AM - 8:00 PM
+    /// 夜间停运时段（8pm-7am）不刷新，节省电量
+    private static let serviceStartHour = 7   // 7:00 AM
+    private static let serviceEndHour = 20    // 8:00 PM
     
     // MARK: - Properties
     
@@ -174,21 +174,21 @@ class BackgroundRefreshManager {
     
     // MARK: - Service Hours Check
     
-    /// 检查当前时间是否在停运时段（11pm-6am）
+    /// 检查当前时间是否在停运时段（8pm-7am）
     /// - Parameter date: 要检查的时间
     /// - Returns: true 表示在停运时段
     func isOutsideServiceHours(_ date: Date = Date()) -> Bool {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: date)
         
-        // 停运时段：23:00 (11pm) - 05:59 (6am前)
-        // 即 hour >= 23 或 hour < 6
+        // 停运时段：20:00 (8pm) - 06:59 (7am前)
+        // 即 hour >= 20 或 hour < 7
         return hour >= Self.serviceEndHour || hour < Self.serviceStartHour
     }
     
     /// 计算下一个运营开始时间
     /// - Parameter from: 起始时间
-    /// - Returns: 下一个 6:00 AM
+    /// - Returns: 下一个 7:00 AM
     private func calculateNextServiceStartTime(from date: Date) -> Date {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: date)
@@ -198,8 +198,8 @@ class BackgroundRefreshManager {
         components.minute = 0
         components.second = 0
         
-        // 如果当前时间已经过了今天的运营开始时间（即在 23:00-23:59），
-        // 则下一个运营开始时间是明天 6:00
+        // 如果当前时间已经过了今天的运营开始时间（即在 20:00-23:59），
+        // 则下一个运营开始时间是明天 7:00
         if hour >= Self.serviceEndHour {
             if let tomorrow = calendar.date(byAdding: .day, value: 1, to: date) {
                 components = calendar.dateComponents([.year, .month, .day], from: tomorrow)
@@ -322,7 +322,7 @@ class BackgroundRefreshManager {
         
         // 检查是否在停运时段
         if isOutsideServiceHours() {
-            print("BackgroundRefreshManager: 🌙 Outside service hours (11pm-6am), skipping refresh")
+            print("BackgroundRefreshManager: 🌙 Outside service hours (8pm-7am), skipping refresh")
             // 更新 Widget 显示停运状态
             var mutableStorage = storageService
             mutableStorage.load()

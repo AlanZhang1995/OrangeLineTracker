@@ -167,6 +167,9 @@ class MetroViewModel: ObservableObject {
         // Get the correct station ID for the selected direction
         let stationId = station.stationId(for: selectedDirection)
         
+        let directionText = selectedDirection == .alumRock ? "→东(Alum Rock)" : "←西(Mountain View)"
+        print("MetroViewModel: 🔄 Refreshing predictions for \(station.name) \(directionText)")
+        
         do {
             // Fetch predictions from VTA API
             // Validates: Requirements 3.1 - fetch real-time arrival prediction data
@@ -183,16 +186,23 @@ class MetroViewModel: ObservableObject {
             
             // Update widget data
             let arrivalMinutes = newPredictions.first?.minutesUntilArrival
+            if let minutes = arrivalMinutes {
+                print("MetroViewModel: ✅ Got \(newPredictions.count) predictions, next train in \(minutes) min for \(station.shortName) \(directionText)")
+            } else {
+                print("MetroViewModel: ⚠️ No predictions available for \(station.shortName) \(directionText)")
+            }
             storageService.updateWidgetData(arrivalMinutes: arrivalMinutes)
             WidgetCenter.shared.reloadAllTimelines()
             
         } catch let error as VTAServiceError {
             // Handle VTA service errors
             // Validates: Requirements 5.1, 5.2, 5.3, 5.4
+            print("MetroViewModel: ❌ Error fetching predictions for \(station.shortName) \(directionText): \(error.localizedDescription)")
             handleError(error)
             
         } catch {
             // Handle unexpected errors
+            print("MetroViewModel: ❌ Unexpected error for \(station.shortName) \(directionText): \(error.localizedDescription)")
             handleError(.networkError(error.localizedDescription))
         }
         

@@ -190,14 +190,20 @@ class MetroViewModel: ObservableObject {
             lastUpdated = Date()
             errorMessage = nil
             
-            // Update widget data
+            // Update widget data (直接传递当前显示的站点和方向)
             let arrivalMinutes = newPredictions.first?.minutesUntilArrival
             if let minutes = arrivalMinutes {
                 print("MetroViewModel: ✅ Got \(newPredictions.count) predictions, next train in \(minutes) min for \(station.shortName) \(directionText)")
             } else {
                 print("MetroViewModel: ⚠️ No predictions available for \(station.shortName) \(directionText)")
             }
-            storageService.updateWidgetData(arrivalMinutes: arrivalMinutes)
+            let directionCode = selectedDirection == .alumRock ? "E" : "W"
+            storageService.updateWidgetData(
+                stationName: station.name,
+                stationShortName: station.shortName,
+                direction: directionCode,
+                arrivalMinutes: arrivalMinutes
+            )
             WidgetCenter.shared.reloadAllTimelines()
             
         } catch let error as VTAServiceError {
@@ -261,7 +267,13 @@ class MetroViewModel: ObservableObject {
             cachedPredictions = []
             
             // Clear widget data to prevent showing stale data from old station
-            storageService.updateWidgetData(arrivalMinutes: nil)
+            let directionCode = activeRule.direction == .alumRock ? "E" : "W"
+            storageService.updateWidgetData(
+                stationName: station.name,
+                stationShortName: station.shortName,
+                direction: directionCode,
+                arrivalMinutes: nil
+            )
             
             // Save the new preferences
             savePreferences()

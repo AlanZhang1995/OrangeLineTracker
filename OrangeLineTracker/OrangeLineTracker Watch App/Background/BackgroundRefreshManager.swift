@@ -500,6 +500,19 @@ class BackgroundRefreshManager {
         }
     }
     
+    /// Resets arrival minutes and reschedules background refresh
+    /// Call this when user changes station or direction to ensure fresh data
+    func resetAndReschedule() {
+        print("BackgroundRefreshManager: 🔄 Station/direction changed, resetting and rescheduling")
+        
+        // Clear cached arrival minutes since they're no longer valid
+        lastKnownArrivalMinutes = nil
+        saveLastArrivalMinutes()
+        
+        // Reschedule background refresh with new settings
+        scheduleBackgroundRefresh()
+    }
+    
     /// Returns the time since the last successful refresh
     var timeSinceLastRefresh: TimeInterval? {
         guard let lastRefresh = lastRefreshDate else {

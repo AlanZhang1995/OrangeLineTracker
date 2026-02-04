@@ -117,6 +117,9 @@ class MetroViewModel: ObservableObject {
         // Notify widget of station change immediately
         WidgetCenter.shared.reloadAllTimelines()
         
+        // Reset background refresh schedule for new station
+        BackgroundRefreshManager.shared.resetAndReschedule()
+        
         // Refresh predictions for the new station
         Task {
             await refreshPredictions()
@@ -137,6 +140,9 @@ class MetroViewModel: ObservableObject {
         
         // Notify widget of direction change immediately
         WidgetCenter.shared.reloadAllTimelines()
+        
+        // Reset background refresh schedule for new direction
+        BackgroundRefreshManager.shared.resetAndReschedule()
         
         // Refresh predictions for the new direction
         Task {

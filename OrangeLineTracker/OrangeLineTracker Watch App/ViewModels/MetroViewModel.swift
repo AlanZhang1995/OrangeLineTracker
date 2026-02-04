@@ -48,7 +48,13 @@ class MetroViewModel: ObservableObject {
     private let vtaService: VTAServiceProtocol
     
     /// Service for persisting user preferences
-    private var storageService: StorageServiceProtocol
+    private var _storageService: StorageServiceProtocol
+    
+    /// Public access to storage service for settings
+    var storageService: StorageServiceProtocol {
+        get { _storageService }
+        set { _storageService = newValue }
+    }
     
     /// Service for managing time-based rules
     private let timeRuleService: TimeRuleServiceProtocol
@@ -80,7 +86,7 @@ class MetroViewModel: ObservableObject {
         timeRuleService: TimeRuleServiceProtocol
     ) {
         self.vtaService = vtaService
-        self.storageService = storageService
+        self._storageService = storageService
         self.timeRuleService = timeRuleService
         
         // Load saved preferences

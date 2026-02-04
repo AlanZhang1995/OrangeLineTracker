@@ -15,6 +15,7 @@ enum StorageKeys {
     static let selectedDirection = "selectedDirection"
     static let timeRules = "timeRules"
     static let isTimeRuleEnabled = "isTimeRuleEnabled"
+    static let isSmartRefreshEnabled = "isSmartRefreshEnabled"
     
     // Widget shared keys
     static let selectedStationName = "selectedStationName"
@@ -46,6 +47,9 @@ protocol StorageServiceProtocol: AnyObject {
     
     /// Whether time rule functionality is enabled
     var isTimeRuleEnabled: Bool { get set }
+    
+    /// Whether smart background refresh is enabled (vs random interval)
+    var isSmartRefreshEnabled: Bool { get set }
     
     /// Cached arrival minutes for widget
     var cachedArrivalMinutes: Int? { get set }
@@ -92,6 +96,11 @@ class StorageService: StorageServiceProtocol {
     /// Whether time rule functionality is enabled
     /// - Validates: Requirements 8.6
     var isTimeRuleEnabled: Bool = false
+    
+    /// Whether smart background refresh is enabled
+    /// When true: uses smart refresh based on arrival time
+    /// When false: uses random interval (10-20 minutes)
+    var isSmartRefreshEnabled: Bool = true
     
     /// Cached arrival minutes for widget
     var cachedArrivalMinutes: Int?
@@ -151,6 +160,9 @@ class StorageService: StorageServiceProtocol {
         
         // Save time rule enabled state
         userDefaults.set(isTimeRuleEnabled, forKey: StorageKeys.isTimeRuleEnabled)
+        
+        // Save smart refresh enabled state
+        userDefaults.set(isSmartRefreshEnabled, forKey: StorageKeys.isSmartRefreshEnabled)
         
         // Sync time rules to widget shared defaults
         syncTimeRulesToWidget()
@@ -226,6 +238,13 @@ class StorageService: StorageServiceProtocol {
         
         // Load time rule enabled state
         isTimeRuleEnabled = userDefaults.bool(forKey: StorageKeys.isTimeRuleEnabled)
+        
+        // Load smart refresh enabled state (default to true if not set)
+        if userDefaults.object(forKey: StorageKeys.isSmartRefreshEnabled) != nil {
+            isSmartRefreshEnabled = userDefaults.bool(forKey: StorageKeys.isSmartRefreshEnabled)
+        } else {
+            isSmartRefreshEnabled = true
+        }
     }
     
     // MARK: - Convenience Methods
@@ -241,6 +260,7 @@ class StorageService: StorageServiceProtocol {
         selectedDirection = nil
         timeRules = []
         isTimeRuleEnabled = false
+        isSmartRefreshEnabled = true
     }
     
     /// Checks if there are any saved preferences

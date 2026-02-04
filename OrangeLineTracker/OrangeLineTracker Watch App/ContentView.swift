@@ -112,7 +112,7 @@ enum Tab: Int, CaseIterable {
 
 /// View for displaying arrival times with large font display
 /// Implements pull-to-refresh, loading indicators, and error states
-/// Uses Timer for real-time countdown updates and auto-refresh
+/// Uses Timer for real-time countdown updates and auto-refresh at each minute mark (:00 seconds)
 /// - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.3, 6.1, 6.4, 6.5
 struct ArrivalView: View {
     @ObservedObject var viewModel: MetroViewModel
@@ -120,12 +120,8 @@ struct ArrivalView: View {
     /// Current time for countdown calculation, triggers view refresh
     @State private var currentTime = Date()
     
-    /// Timer publisher for countdown updates (every 20 seconds)
-    /// Also handles auto-refresh check every 60 seconds
-    private let countdownTimer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
-    
-    /// Track last refresh time to ensure refresh happens
-    @State private var lastRefreshTime = Date()
+    /// Timer for refreshing at each minute mark (:00 seconds)
+    @State private var minuteTimer: Timer?
     
     var body: some View {
         ScrollView {
@@ -162,9 +158,8 @@ struct ArrivalView: View {
         }
         .navigationTitle("到站时间")
         .onAppear {
-            // Reset current time and last refresh time when view appears
+            // Reset current time when view appears
             currentTime = Date()
-            lastRefreshTime = Date()
             
             // Auto-refresh when view appears if we have a station selected
             if viewModel.selectedStation != nil && viewModel.predictions.isEmpty && !viewModel.isLoading {
@@ -172,22 +167,53 @@ struct ArrivalView: View {
                     await viewModel.refreshPredictions()
                 }
             }
-        }
-        // Update currentTime every 10 seconds to refresh countdown display
-        // Also check if we need to refresh API data (every 60 seconds)
-        .onReceive(countdownTimer) { newTime in
-            currentTime = newTime
             
-            // Check if 60 seconds have passed since last refresh
-            let timeSinceLastRefresh = newTime.timeIntervalSince(lastRefreshTime)
-            if timeSinceLastRefresh >= 60 {
-                if viewModel.selectedStation != nil && !viewModel.isLoading {
-                    print("ArrivalView: 🔄 Auto-refreshing predictions (last refresh: \(Int(timeSinceLastRefresh))s ago)...")
-                    lastRefreshTime = newTime
-                    Task {
-                        await viewModel.refreshPredictions()
-                    }
-                }
+            // Schedule timer to fire at next minute mark
+            scheduleMinuteTimer()
+        }
+        .onDisappear {
+            // Clean up timer when view disappears
+            minuteTimer?.invalidate()
+            minuteTimer = nil
+        }
+    }
+    
+    // MARK: - Minute Timer Scheduling
+    
+    /// Schedules a timer to fire at the next minute mark (:00 seconds)
+    private func scheduleMinuteTimer() {
+        // Invalidate existing timer
+        minuteTimer?.invalidate()
+        
+        // Calculate seconds until next minute mark
+        let now = Date()
+        let calendar = Calendar.current
+        let seconds = calendar.component(.second, from: now)
+        let secondsUntilNextMinute = 60 - seconds
+        
+        // Schedule timer to fire at next minute mark
+        minuteTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(secondsUntilNextMinute), repeats: false) { _ in
+            // Update current time and refresh
+            self.onMinuteMark()
+            
+            // Schedule repeating timer for subsequent minutes
+            self.minuteTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+                self.onMinuteMark()
+            }
+        }
+    }
+    
+    /// Called at each minute mark (:00 seconds)
+    private func onMinuteMark() {
+        currentTime = Date()
+        
+        // Refresh API data at each minute mark
+        if viewModel.selectedStation != nil && !viewModel.isLoading {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm:ss"
+            print("ArrivalView: 🔄 Auto-refreshing at minute mark \(formatter.string(from: currentTime))")
+            Task {
+                await viewModel.refreshPredictions()
             }
         }
     }
@@ -460,44 +486,6 @@ struct StationPickerView: View {
                 }
                 .pickerStyle(.navigationLink)
                 .tint(.orange)
-                
-                // Current selection display
-                if let station = viewModel.selectedStation {
-                    VStack(spacing: 8) {
-                        Divider()
-                            .background(Color.orange.opacity(0.3))
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.orange)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("已选择")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                
-                                Text(station.name)
-                                    .font(.body)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.orange)
-                            }
-                            
-                            Spacer()
-                            
-                            Text(station.shortName)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(Color.orange)
-                                )
-                        }
-                    }
-                    .padding(.top, 8)
-                }
             }
             .padding()
         }
@@ -606,12 +594,8 @@ struct SettingsView: View {
                 // THE Time_Rule_Manager SHALL 允许用户启用或禁用时间规则功能
                 timeRuleSection
                 
-                // Direction selection section using DirectionPickerView
-                // Validates: Requirements 2.1, 2.2, 2.4, 6.3
-                directionSection
-                
-                // Current settings summary
-                currentSettingsSection
+                // Background refresh settings
+                backgroundRefreshSection
             }
             .navigationTitle("设置")
         }
@@ -730,95 +714,48 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - Direction Section
+    // MARK: - Background Refresh Section
     
-    /// Section for direction selection using DirectionPickerView
-    /// - Validates: Requirements 2.1, 2.2, 2.4, 6.3
-    private var directionSection: some View {
+    /// Section for background refresh settings
+    private var backgroundRefreshSection: some View {
         Section {
-            DirectionPickerView(
-                selectedDirection: Binding(
-                    get: { metroViewModel.selectedDirection },
-                    set: { metroViewModel.selectDirection($0) }
-                ),
-                style: .buttons
-            )
-            .listRowBackground(Color.clear)
-        } header: {
-            Label("方向", systemImage: "arrow.left.arrow.right")
-                .foregroundColor(.orange)
-        }
-    }
-    
-    // MARK: - Current Settings Section
-    
-    /// Section displaying current settings summary
-    private var currentSettingsSection: some View {
-        Section {
-            // Current station
-            HStack(spacing: 8) {
-                Image(systemName: "tram.fill")
-                    .foregroundColor(.orange)
-                    .font(.caption)
-                
-                Text("站点")
-                
-                Spacer()
-                
-                if let station = metroViewModel.selectedStation {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(station.name)
-                            .font(.caption)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
+            Toggle(isOn: Binding(
+                get: { metroViewModel.storageService.isSmartRefreshEnabled },
+                set: { newValue in
+                    var storage = metroViewModel.storageService
+                    storage.isSmartRefreshEnabled = newValue
+                    storage.save()
+                    // 重新调度后台刷新
+                    BackgroundRefreshManager.shared.resetAndReschedule()
+                }
+            )) {
+                HStack(spacing: 8) {
+                    Image(systemName: "brain.head.profile")
+                        .foregroundColor(.orange)
+                        .font(.body)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("智能刷新")
+                            .font(.body)
                         
-                        Text(station.shortName)
+                        Text(metroViewModel.storageService.isSmartRefreshEnabled
+                             ? "根据到站时间调整刷新频率"
+                             : "使用随机间隔 (15-60分钟)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
-                } else {
-                    Text("未选择")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
             }
-            
-            // Current direction
-            HStack(spacing: 8) {
-                Image(systemName: metroViewModel.selectedDirection.iconName)
-                    .foregroundColor(.orange)
-                    .font(.caption)
-                
-                Text("方向")
-                
-                Spacer()
-                
-                Text(metroViewModel.selectedDirection.displayName)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            // Time rule status indicator
-            if timeRuleViewModel.isTimeRuleEnabled && timeRuleViewModel.isTimeRuleActive {
-                HStack(spacing: 8) {
-                    Image(systemName: "clock.arrow.2.circlepath")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                    
-                    Text("自动切换")
-                    
-                    Spacer()
-                    
-                    Text("已启用")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
-            }
+            .tint(.orange)
         } header: {
-            Label("当前设置", systemImage: "info.circle")
+            Label("后台刷新", systemImage: "arrow.clockwise")
                 .foregroundColor(.orange)
+        } footer: {
+            Text("智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔")
+                .font(.caption2)
         }
     }
+    
 }
 
 // MARK: - TimeRuleConfigView

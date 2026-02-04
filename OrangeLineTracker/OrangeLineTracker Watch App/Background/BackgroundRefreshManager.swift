@@ -42,6 +42,12 @@ class BackgroundRefreshManager {
     private static let veryFarRefreshInterval: TimeInterval = 12 * 60   // 12 min (>20 min arrival)
     private static let recoveryRefreshInterval: TimeInterval = 3 * 60   // 3 min (no data/error)
     
+    // MARK: - Random Refresh Interval (when smart refresh is disabled)
+    
+    /// 随机刷新间隔范围（15-60 分钟）
+    private static let randomRefreshMinInterval: TimeInterval = 15 * 60  // 15 min
+    private static let randomRefreshMaxInterval: TimeInterval = 60 * 60  // 60 min
+    
     // MARK: - Service Hours (VTA Orange Line)
     
     /// 运营时间配置
@@ -151,12 +157,21 @@ class BackgroundRefreshManager {
             return nextServiceStart
         }
         
-        // 计算智能刷新间隔
-        let smartInterval = calculateSmartRefreshInterval(arrivalMinutes: lastKnownArrivalMinutes)
+        // 根据设置选择刷新间隔
+        var mutableStorage = storageService
+        mutableStorage.load()
         
-        // watchOS 后台刷新限制为 ~15 分钟，但我们仍然使用智能间隔来优化
-        // 如果智能间隔小于 15 分钟，系统会在最早可能的时间执行
-        let effectiveInterval = max(smartInterval, Self.minimumRefreshInterval)
+        let effectiveInterval: TimeInterval
+        if storageService.isSmartRefreshEnabled {
+            // 智能刷新：根据到站时间计算间隔
+            let smartInterval = calculateSmartRefreshInterval(arrivalMinutes: lastKnownArrivalMinutes)
+            effectiveInterval = max(smartInterval, Self.minimumRefreshInterval)
+            print("BackgroundRefreshManager: 🧠 Smart refresh enabled")
+        } else {
+            // 随机刷新：10-20 分钟随机间隔
+            effectiveInterval = calculateRandomRefreshInterval()
+            print("BackgroundRefreshManager: 🎲 Random refresh enabled")
+        }
         
         // If we have a last refresh date, ensure minimum interval
         if let lastRefresh = lastRefreshDate {
@@ -170,6 +185,14 @@ class BackgroundRefreshManager {
         
         // Schedule for the effective interval from now
         return now.addingTimeInterval(effectiveInterval)
+    }
+    
+    /// 计算随机刷新间隔（10-20 分钟）
+    /// - Returns: 随机间隔（秒）
+    func calculateRandomRefreshInterval() -> TimeInterval {
+        let interval = TimeInterval.random(in: Self.randomRefreshMinInterval...Self.randomRefreshMaxInterval)
+        print("BackgroundRefreshManager: Random refresh interval = \(Int(interval/60)) min")
+        return interval
     }
     
     // MARK: - Service Hours Check

@@ -38,7 +38,7 @@ class IntegrationMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
-    func updateWidgetData(arrivalMinutes: Int?) {
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?) {
         updateWidgetDataCallCount += 1
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()

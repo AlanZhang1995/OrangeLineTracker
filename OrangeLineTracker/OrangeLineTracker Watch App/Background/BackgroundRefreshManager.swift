@@ -349,7 +349,16 @@ class BackgroundRefreshManager {
             // 更新 Widget 显示停运状态
             var mutableStorage = storageService
             mutableStorage.load()
-            mutableStorage.updateWidgetData(arrivalMinutes: nil)
+            if let station = mutableStorage.selectedStation,
+               let direction = mutableStorage.selectedDirection {
+                let directionCode = direction == .alumRock ? "E" : "W"
+                mutableStorage.updateWidgetData(
+                    stationName: station.name,
+                    stationShortName: station.shortName,
+                    direction: directionCode,
+                    arrivalMinutes: nil
+                )
+            }
             WidgetCenter.shared.reloadAllTimelines()
             
             // 更新 Complication 显示停运状态
@@ -382,7 +391,13 @@ class BackgroundRefreshManager {
             
             if stationChanged || directionChanged {
                 // Clear old widget data before updating to new station
-                mutableStorage.updateWidgetData(arrivalMinutes: nil)
+                let directionCode = activeRule.direction == .alumRock ? "E" : "W"
+                mutableStorage.updateWidgetData(
+                    stationName: ruleStation.name,
+                    stationShortName: ruleStation.shortName,
+                    direction: directionCode,
+                    arrivalMinutes: nil
+                )
                 WidgetCenter.shared.reloadAllTimelines()
             }
             
@@ -431,7 +446,13 @@ class BackgroundRefreshManager {
                 updateComplicationData(complicationData)
                 
                 // Also update widget shared data
-                mutableStorage.updateWidgetData(arrivalMinutes: nextPrediction.minutesUntilArrival)
+                let directionCode = direction == .alumRock ? "E" : "W"
+                mutableStorage.updateWidgetData(
+                    stationName: station.name,
+                    stationShortName: station.shortName,
+                    direction: directionCode,
+                    arrivalMinutes: nextPrediction.minutesUntilArrival
+                )
                 
                 // Notify widget to reload with new data
                 WidgetCenter.shared.reloadAllTimelines()

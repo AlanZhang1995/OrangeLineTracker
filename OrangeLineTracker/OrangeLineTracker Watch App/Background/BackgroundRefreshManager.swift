@@ -119,15 +119,21 @@ class BackgroundRefreshManager {
         // Calculate the next refresh date
         let nextRefreshDate = calculateNextRefreshDate()
         
+        // Format for logging
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        let nextTimeStr = formatter.string(from: nextRefreshDate)
+        let intervalMinutes = Int(nextRefreshDate.timeIntervalSinceNow / 60)
+        
         // Schedule the background app refresh task
         WKApplication.shared().scheduleBackgroundRefresh(
             withPreferredDate: nextRefreshDate,
             userInfo: nil
         ) { error in
             if let error = error {
-                print("BackgroundRefreshManager: Failed to schedule refresh - \(error.localizedDescription)")
+                print("BackgroundRefreshManager: ❌ Failed to schedule refresh - \(error.localizedDescription)")
             } else {
-                print("BackgroundRefreshManager: Scheduled refresh for \(nextRefreshDate)")
+                print("BackgroundRefreshManager: ✅ Next refresh scheduled at \(nextTimeStr) (in ~\(intervalMinutes) min)")
             }
         }
     }
@@ -309,11 +315,14 @@ class BackgroundRefreshManager {
     /// Performs the background data refresh operation
     /// Fetches new predictions and updates the complication
     private func performBackgroundDataRefresh() async {
-        print("BackgroundRefreshManager: Starting background data refresh")
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        let nowStr = formatter.string(from: Date())
+        print("BackgroundRefreshManager: 🔄 Background refresh started at \(nowStr)")
         
         // 检查是否在停运时段
         if isOutsideServiceHours() {
-            print("BackgroundRefreshManager: Outside service hours (11pm-6am), skipping refresh")
+            print("BackgroundRefreshManager: 🌙 Outside service hours (11pm-6am), skipping refresh")
             // 更新 Widget 显示停运状态
             var mutableStorage = storageService
             mutableStorage.load()
@@ -386,7 +395,7 @@ class BackgroundRefreshManager {
             
             // Get the first prediction (next arriving train)
             if let nextPrediction = predictions.first {
-                print("BackgroundRefreshManager: Got prediction - \(nextPrediction.minutesUntilArrival) minutes")
+                print("BackgroundRefreshManager: 🚇 Got prediction - \(nextPrediction.minutesUntilArrival) min to arrival")
                 
                 // Create complication data from prediction
                 let complicationData = ComplicationData.from(
@@ -411,7 +420,7 @@ class BackgroundRefreshManager {
                 lastKnownArrivalMinutes = nextPrediction.minutesUntilArrival
                 saveLastArrivalMinutes()
             } else {
-                print("BackgroundRefreshManager: No predictions available")
+                print("BackgroundRefreshManager: ⚠️ No predictions available")
                 // No predictions available
                 updateComplicationData(ComplicationData.errorState(
                     stationShortName: station.shortName,
@@ -420,7 +429,7 @@ class BackgroundRefreshManager {
             }
         } catch {
             // Error fetching data - update with error state but preserve station info
-            print("BackgroundRefreshManager: Error fetching predictions - \(error.localizedDescription)")
+            print("BackgroundRefreshManager: ❌ Error fetching predictions - \(error.localizedDescription)")
             updateComplicationData(ComplicationData.errorState(
                 stationShortName: station.shortName,
                 direction: direction

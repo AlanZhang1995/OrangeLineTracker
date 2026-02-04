@@ -31,3 +31,6 @@ __pycache__/
 
 # Kiro
 .kiro/
+
+# Dev logs
+DEVLOG.md

@@ -265,13 +265,14 @@ class MetroViewModel: ObservableObject {
     // MARK: - Time Rule Timer
     
     /// Starts the periodic timer for checking time rules
-    /// Checks every minute to see if a new rule should be applied
+    /// Checks every 30 minutes to see if a new rule should be applied
+    /// (Time rules are typically set by hour, so 30 min interval is sufficient)
     private func startTimeRuleCheckTimer() {
         // Stop any existing timer
         stopTimeRuleCheckTimer()
         
-        // Create a timer that fires every 60 seconds
-        timeRuleCheckTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        // Create a timer that fires every 30 minutes (1800 seconds)
+        timeRuleCheckTimer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.applyTimeRuleIfNeeded()
             }

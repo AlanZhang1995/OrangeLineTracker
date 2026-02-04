@@ -21,7 +21,9 @@ enum StorageKeys {
     static let widgetStationName = "widget_stationName"
     static let widgetStationShortName = "widget_stationShortName"
     static let widgetDirection = "widget_direction"
-    static let widgetArrivalTimestamp = "widget_arrivalTimestamp"
+    static let widgetArrivalTimestamp1 = "widget_arrivalTimestamp1"  // 第一班车
+    static let widgetArrivalTimestamp2 = "widget_arrivalTimestamp2"  // 第二班车
+    static let widgetArrivalTimestamp3 = "widget_arrivalTimestamp3"  // 第三班车
     static let widgetLastUpdateTime = "widget_lastUpdateTime"
 }
 
@@ -67,8 +69,10 @@ protocol StorageServiceProtocol: AnyObject {
     ///   - stationName: 当前显示的站点名称
     ///   - stationShortName: 当前显示的站点缩写
     ///   - direction: 当前显示的方向
-    ///   - arrivalMinutes: 到站分钟数
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?)
+    ///   - arrivalMinutes: 第一班车到站分钟数
+    ///   - arrivalMinutes2: 第二班车到站分钟数（可选）
+    ///   - arrivalMinutes3: 第三班车到站分钟数（可选）
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int?, arrivalMinutes3: Int?)
 }
 
 // MARK: - StorageService
@@ -153,33 +157,54 @@ class StorageService: StorageServiceProtocol {
     }
     
     /// Updates widget data in shared storage
-    /// 直接存储当前 ArrivalView 显示的数据，Widget 只需读取即可
+    /// 存储最多 3 班车的到站时间戳，Widget 可以自动切换到下一班车
     /// - Parameters:
     ///   - stationName: 当前显示的站点名称
     ///   - stationShortName: 当前显示的站点缩写
     ///   - direction: 当前显示的方向
-    ///   - arrivalMinutes: 到站分钟数（nil 表示无数据）
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?) {
+    ///   - arrivalMinutes: 第一班车到站分钟数（nil 表示无数据）
+    ///   - arrivalMinutes2: 第二班车到站分钟数（可选）
+    ///   - arrivalMinutes3: 第三班车到站分钟数（可选）
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil) {
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
+        let now = Date()
         
         // 存储当前显示的站点和方向
         sharedDefaults?.set(stationName, forKey: StorageKeys.widgetStationName)
         sharedDefaults?.set(stationShortName, forKey: StorageKeys.widgetStationShortName)
         sharedDefaults?.set(direction, forKey: StorageKeys.widgetDirection)
         
-        // 存储到站时间戳
+        // 存储第一班车到站时间戳
         if let minutes = arrivalMinutes {
-            let arrivalTimestamp = Date().addingTimeInterval(TimeInterval(minutes * 60))
-            sharedDefaults?.set(arrivalTimestamp.timeIntervalSince1970, forKey: StorageKeys.widgetArrivalTimestamp)
+            let arrivalTimestamp = now.addingTimeInterval(TimeInterval(minutes * 60))
+            sharedDefaults?.set(arrivalTimestamp.timeIntervalSince1970, forKey: StorageKeys.widgetArrivalTimestamp1)
         } else {
-            sharedDefaults?.removeObject(forKey: StorageKeys.widgetArrivalTimestamp)
+            sharedDefaults?.removeObject(forKey: StorageKeys.widgetArrivalTimestamp1)
+        }
+        
+        // 存储第二班车到站时间戳
+        if let minutes2 = arrivalMinutes2 {
+            let arrivalTimestamp2 = now.addingTimeInterval(TimeInterval(minutes2 * 60))
+            sharedDefaults?.set(arrivalTimestamp2.timeIntervalSince1970, forKey: StorageKeys.widgetArrivalTimestamp2)
+        } else {
+            sharedDefaults?.removeObject(forKey: StorageKeys.widgetArrivalTimestamp2)
+        }
+        
+        // 存储第三班车到站时间戳
+        if let minutes3 = arrivalMinutes3 {
+            let arrivalTimestamp3 = now.addingTimeInterval(TimeInterval(minutes3 * 60))
+            sharedDefaults?.set(arrivalTimestamp3.timeIntervalSince1970, forKey: StorageKeys.widgetArrivalTimestamp3)
+        } else {
+            sharedDefaults?.removeObject(forKey: StorageKeys.widgetArrivalTimestamp3)
         }
         
         // 存储更新时间
-        sharedDefaults?.set(Date().timeIntervalSince1970, forKey: StorageKeys.widgetLastUpdateTime)
+        sharedDefaults?.set(now.timeIntervalSince1970, forKey: StorageKeys.widgetLastUpdateTime)
         
-        print("StorageService: 📱 Widget data updated - \(stationName) \(direction) \(arrivalMinutes ?? -1)min")
+        let train2Str = arrivalMinutes2.map { "\($0)" } ?? "-"
+        let train3Str = arrivalMinutes3.map { "\($0)" } ?? "-"
+        print("StorageService: 📱 Widget data updated - \(stationName) \(direction) trains: \(arrivalMinutes ?? -1)/\(train2Str)/\(train3Str) min")
     }
     
     /// Loads all preferences from UserDefaults

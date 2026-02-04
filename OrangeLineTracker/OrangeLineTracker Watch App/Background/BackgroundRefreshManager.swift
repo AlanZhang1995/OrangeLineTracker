@@ -356,7 +356,9 @@ class BackgroundRefreshManager {
                     stationName: station.name,
                     stationShortName: station.shortName,
                     direction: directionCode,
-                    arrivalMinutes: nil
+                    arrivalMinutes: nil,
+                    arrivalMinutes2: nil,
+                    arrivalMinutes3: nil
                 )
             }
             WidgetCenter.shared.reloadAllTimelines()
@@ -396,7 +398,9 @@ class BackgroundRefreshManager {
                     stationName: ruleStation.name,
                     stationShortName: ruleStation.shortName,
                     direction: directionCode,
-                    arrivalMinutes: nil
+                    arrivalMinutes: nil,
+                    arrivalMinutes2: nil,
+                    arrivalMinutes3: nil
                 )
                 WidgetCenter.shared.reloadAllTimelines()
             }
@@ -445,13 +449,17 @@ class BackgroundRefreshManager {
                 // Update the complication
                 updateComplicationData(complicationData)
                 
-                // Also update widget shared data
+                // Also update widget shared data (传递前 3 班车)
                 let directionCode = direction == .alumRock ? "E" : "W"
+                let arrivalMinutes2 = predictions.count > 1 ? predictions[1].minutesUntilArrival : nil
+                let arrivalMinutes3 = predictions.count > 2 ? predictions[2].minutesUntilArrival : nil
                 mutableStorage.updateWidgetData(
                     stationName: station.name,
                     stationShortName: station.shortName,
                     direction: directionCode,
-                    arrivalMinutes: nextPrediction.minutesUntilArrival
+                    arrivalMinutes: nextPrediction.minutesUntilArrival,
+                    arrivalMinutes2: arrivalMinutes2,
+                    arrivalMinutes3: arrivalMinutes3
                 )
                 
                 // Notify widget to reload with new data

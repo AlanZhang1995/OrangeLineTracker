@@ -19,7 +19,9 @@ private enum WidgetStorageKeys {
     static let stationName = "widget_stationName"
     static let stationShortName = "widget_stationShortName"
     static let direction = "widget_direction"
-    static let arrivalTimestamp = "widget_arrivalTimestamp"
+    static let arrivalTimestamp1 = "widget_arrivalTimestamp1"  // 第一班车
+    static let arrivalTimestamp2 = "widget_arrivalTimestamp2"  // 第二班车
+    static let arrivalTimestamp3 = "widget_arrivalTimestamp3"  // 第三班车
     static let lastUpdateTime = "widget_lastUpdateTime"
 }
 
@@ -100,13 +102,24 @@ struct OrangeLineProvider: TimelineProvider {
                 continue
             }
             
-            // 计算到站时间（基于 App 写入的到站时间戳）
+            // 计算到站时间（尝试 3 班车，自动切换到下一班）
             var arrivalMinutes: Int? = nil
-            if let arrivalTimestamp = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp) as? TimeInterval {
-                let arrivalDate = Date(timeIntervalSince1970: arrivalTimestamp)
+            
+            // 读取 3 班车的时间戳
+            let timestamp1 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp1) as? TimeInterval
+            let timestamp2 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp2) as? TimeInterval
+            let timestamp3 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp3) as? TimeInterval
+            
+            // 按顺序尝试每班车，找到第一个还没过期的
+            for timestamp in [timestamp1, timestamp2, timestamp3] {
+                guard let ts = timestamp else { continue }
+                let arrivalDate = Date(timeIntervalSince1970: ts)
                 let remainingSeconds = arrivalDate.timeIntervalSince(entryDate)
                 let remainingMinutes = Int(ceil(remainingSeconds / 60))
-                arrivalMinutes = remainingMinutes >= 0 ? remainingMinutes : nil
+                if remainingMinutes >= 0 {
+                    arrivalMinutes = remainingMinutes
+                    break  // 找到有效的就停止
+                }
             }
             
             // 检查数据是否过期（超过 5 分钟未更新）
@@ -144,13 +157,22 @@ struct OrangeLineProvider: TimelineProvider {
         let stationShortName = defaults.string(forKey: WidgetStorageKeys.stationShortName) ?? "--"
         let direction = defaults.string(forKey: WidgetStorageKeys.direction) ?? "--"
         
-        // 计算到站时间
+        // 计算到站时间（尝试 3 班车，自动切换到下一班）
         var arrivalMinutes: Int? = nil
-        if let arrivalTimestamp = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp) as? TimeInterval {
-            let arrivalDate = Date(timeIntervalSince1970: arrivalTimestamp)
+        
+        let timestamp1 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp1) as? TimeInterval
+        let timestamp2 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp2) as? TimeInterval
+        let timestamp3 = defaults.object(forKey: WidgetStorageKeys.arrivalTimestamp3) as? TimeInterval
+        
+        for timestamp in [timestamp1, timestamp2, timestamp3] {
+            guard let ts = timestamp else { continue }
+            let arrivalDate = Date(timeIntervalSince1970: ts)
             let remainingSeconds = arrivalDate.timeIntervalSince(date)
             let remainingMinutes = Int(ceil(remainingSeconds / 60))
-            arrivalMinutes = remainingMinutes >= 0 ? remainingMinutes : nil
+            if remainingMinutes >= 0 {
+                arrivalMinutes = remainingMinutes
+                break
+            }
         }
         
         // 检查数据是否过期

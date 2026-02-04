@@ -190,10 +190,15 @@ class MetroViewModel: ObservableObject {
             lastUpdated = Date()
             errorMessage = nil
             
-            // Update widget data (直接传递当前显示的站点和方向)
+            // Update widget data (传递前 3 班车的到站时间)
             let arrivalMinutes = newPredictions.first?.minutesUntilArrival
+            let arrivalMinutes2 = newPredictions.count > 1 ? newPredictions[1].minutesUntilArrival : nil
+            let arrivalMinutes3 = newPredictions.count > 2 ? newPredictions[2].minutesUntilArrival : nil
+            
             if let minutes = arrivalMinutes {
-                print("MetroViewModel: ✅ Got \(newPredictions.count) predictions, next train in \(minutes) min for \(station.shortName) \(directionText)")
+                let train2Str = arrivalMinutes2.map { "\($0)" } ?? "-"
+                let train3Str = arrivalMinutes3.map { "\($0)" } ?? "-"
+                print("MetroViewModel: ✅ Got \(newPredictions.count) predictions for \(station.shortName) \(directionText), trains: \(minutes)/\(train2Str)/\(train3Str) min")
             } else {
                 print("MetroViewModel: ⚠️ No predictions available for \(station.shortName) \(directionText)")
             }
@@ -202,7 +207,9 @@ class MetroViewModel: ObservableObject {
                 stationName: station.name,
                 stationShortName: station.shortName,
                 direction: directionCode,
-                arrivalMinutes: arrivalMinutes
+                arrivalMinutes: arrivalMinutes,
+                arrivalMinutes2: arrivalMinutes2,
+                arrivalMinutes3: arrivalMinutes3
             )
             WidgetCenter.shared.reloadAllTimelines()
             
@@ -272,7 +279,9 @@ class MetroViewModel: ObservableObject {
                 stationName: station.name,
                 stationShortName: station.shortName,
                 direction: directionCode,
-                arrivalMinutes: nil
+                arrivalMinutes: nil,
+                arrivalMinutes2: nil,
+                arrivalMinutes3: nil
             )
             
             // Save the new preferences

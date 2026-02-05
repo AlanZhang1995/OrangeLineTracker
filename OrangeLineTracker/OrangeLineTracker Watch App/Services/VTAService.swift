@@ -164,8 +164,8 @@ class VTAService: VTAServiceProtocol {
             type: .lightRail,
             colorHex: "#F7931E",
             directions: [
-                LineDirection(id: "E", headsign: "Alum Rock"),
-                LineDirection(id: "W", headsign: "Mountain View")
+                LineDirection(id: "W", headsign: "Mountain View"),
+                LineDirection(id: "E", headsign: "Alum Rock")
             ],
             stations: OrangeLineStations.stations
         ),

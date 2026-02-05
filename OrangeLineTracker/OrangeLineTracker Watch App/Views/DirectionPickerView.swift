@@ -41,8 +41,8 @@ struct DirectionPickerView: View {
     /// Falls back to Orange Line directions if lineDirections is nil
     private var effectiveDirections: [LineDirection] {
         lineDirections ?? [
-            LineDirection(id: "E", headsign: "Alum Rock"),
-            LineDirection(id: "W", headsign: "Mountain View")
+            LineDirection(id: "W", headsign: "Mountain View"),
+            LineDirection(id: "E", headsign: "Alum Rock")
         ]
     }
     
@@ -405,10 +405,10 @@ extension DirectionPickerView {
 
 #Preview("Segmented Style - Orange Line") {
     DirectionPickerView(
-        selectedDirectionId: .constant("E"),
+        selectedDirectionId: .constant("W"),
         lineDirections: [
-            LineDirection(id: "E", headsign: "Alum Rock"),
-            LineDirection(id: "W", headsign: "Mountain View")
+            LineDirection(id: "W", headsign: "Mountain View"),
+            LineDirection(id: "E", headsign: "Alum Rock")
         ],
         style: .segmented,
         lineColorHex: "#F7931E"

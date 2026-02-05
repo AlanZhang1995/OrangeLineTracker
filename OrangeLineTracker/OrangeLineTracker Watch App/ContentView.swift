@@ -1243,8 +1243,8 @@ struct TimeRuleRowView: View {
         switch lineId {
         case "Orange":
             return [
-                LineDirection(id: "E", headsign: "Alum Rock"),
-                LineDirection(id: "W", headsign: "Mountain View")
+                LineDirection(id: "W", headsign: "Mountain View"),
+                LineDirection(id: "E", headsign: "Alum Rock")
             ]
         case "Blue":
             return [
@@ -1258,8 +1258,8 @@ struct TimeRuleRowView: View {
             ]
         default:
             return [
-                LineDirection(id: "E", headsign: "Alum Rock"),
-                LineDirection(id: "W", headsign: "Mountain View")
+                LineDirection(id: "W", headsign: "Mountain View"),
+                LineDirection(id: "E", headsign: "Alum Rock")
             ]
         }
     }

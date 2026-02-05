@@ -631,8 +631,8 @@ class MetroViewModel: ObservableObject {
     /// Returns the directions for the current line
     var lineDirections: [LineDirection] {
         selectedLine?.directions ?? [
-            LineDirection(id: "E", headsign: "Alum Rock"),
-            LineDirection(id: "W", headsign: "Mountain View")
+            LineDirection(id: "W", headsign: "Mountain View"),
+            LineDirection(id: "E", headsign: "Alum Rock")
         ]
     }
     

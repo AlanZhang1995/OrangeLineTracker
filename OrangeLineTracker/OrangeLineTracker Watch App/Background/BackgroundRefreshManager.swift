@@ -352,13 +352,28 @@ class BackgroundRefreshManager {
             if let station = mutableStorage.selectedStation,
                let direction = mutableStorage.selectedDirection {
                 let directionCode = direction == .alumRock ? "E" : "W"
+                // Get line info from storage
+                let lineId = mutableStorage.selectedLineId
+                let lineName: String?
+                let lineColor: String?
+                if let cachedLines = mutableStorage.cachedLines,
+                   let line = cachedLines.first(where: { $0.id == lineId }) {
+                    lineName = line.name
+                    lineColor = line.colorHex
+                } else {
+                    lineName = nil
+                    lineColor = nil
+                }
                 mutableStorage.updateWidgetData(
                     stationName: station.name,
                     stationShortName: station.shortName,
                     direction: directionCode,
                     arrivalMinutes: nil,
                     arrivalMinutes2: nil,
-                    arrivalMinutes3: nil
+                    arrivalMinutes3: nil,
+                    lineId: lineId,
+                    lineName: lineName,
+                    lineColor: lineColor
                 )
             }
             WidgetCenter.shared.reloadAllTimelines()
@@ -394,13 +409,28 @@ class BackgroundRefreshManager {
             if stationChanged || directionChanged {
                 // Clear old widget data before updating to new station
                 let directionCode = activeRule.direction == .alumRock ? "E" : "W"
+                // Get line info from storage
+                let lineId = mutableStorage.selectedLineId
+                let lineName: String?
+                let lineColor: String?
+                if let cachedLines = mutableStorage.cachedLines,
+                   let line = cachedLines.first(where: { $0.id == lineId }) {
+                    lineName = line.name
+                    lineColor = line.colorHex
+                } else {
+                    lineName = nil
+                    lineColor = nil
+                }
                 mutableStorage.updateWidgetData(
                     stationName: ruleStation.name,
                     stationShortName: ruleStation.shortName,
                     direction: directionCode,
                     arrivalMinutes: nil,
                     arrivalMinutes2: nil,
-                    arrivalMinutes3: nil
+                    arrivalMinutes3: nil,
+                    lineId: lineId,
+                    lineName: lineName,
+                    lineColor: lineColor
                 )
                 WidgetCenter.shared.reloadAllTimelines()
             }
@@ -453,13 +483,28 @@ class BackgroundRefreshManager {
                 let directionCode = direction == .alumRock ? "E" : "W"
                 let arrivalMinutes2 = predictions.count > 1 ? predictions[1].minutesUntilArrival : nil
                 let arrivalMinutes3 = predictions.count > 2 ? predictions[2].minutesUntilArrival : nil
+                // Get line info from storage
+                let lineId = mutableStorage.selectedLineId
+                let lineName: String?
+                let lineColor: String?
+                if let cachedLines = mutableStorage.cachedLines,
+                   let line = cachedLines.first(where: { $0.id == lineId }) {
+                    lineName = line.name
+                    lineColor = line.colorHex
+                } else {
+                    lineName = nil
+                    lineColor = nil
+                }
                 mutableStorage.updateWidgetData(
                     stationName: station.name,
                     stationShortName: station.shortName,
                     direction: directionCode,
                     arrivalMinutes: nextPrediction.minutesUntilArrival,
                     arrivalMinutes2: arrivalMinutes2,
-                    arrivalMinutes3: arrivalMinutes3
+                    arrivalMinutes3: arrivalMinutes3,
+                    lineId: lineId,
+                    lineName: lineName,
+                    lineColor: lineColor
                 )
                 
                 // Notify widget to reload with new data

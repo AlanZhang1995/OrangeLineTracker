@@ -16,8 +16,14 @@ class TimeRuleViewModelMockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var isSmartRefreshEnabled: Bool = true
     var cachedArrivalMinutes: Int?
     var lastUpdateTime: Date?
+    
+    // Line-related properties (VTA All Lines support)
+    var selectedLineId: String?
+    var favoriteLineIds: Set<String> = []
+    var cachedLines: [Line]?
     
     var saveCallCount = 0
     var loadCallCount = 0
@@ -31,10 +37,14 @@ class TimeRuleViewModelMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil) {
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil, lineId: String? = nil, lineName: String? = nil, lineColor: String? = nil) {
         updateWidgetDataCallCount += 1
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
+    }
+    
+    func migrateFromV1IfNeeded() {
+        // Mock implementation - no-op for tests
     }
     
     func reset() {
@@ -44,6 +54,9 @@ class TimeRuleViewModelMockStorageService: StorageServiceProtocol {
         isTimeRuleEnabled = false
         cachedArrivalMinutes = nil
         lastUpdateTime = nil
+        selectedLineId = nil
+        favoriteLineIds = []
+        cachedLines = nil
         saveCallCount = 0
         loadCallCount = 0
         updateWidgetDataCallCount = 0
@@ -825,7 +838,8 @@ struct TimeRuleViewModelValidationTests {
             storageService: mockStorageService
         )
         
-        #expect(viewModel.isValidStationId("70261") == true) // Mountain View
+        // Mountain View station's primary ID is its eastboundId "64786"
+        #expect(viewModel.isValidStationId("64786") == true) // Mountain View
     }
     
     @Test func isValidStationIdReturnsFalseForInvalidId() {

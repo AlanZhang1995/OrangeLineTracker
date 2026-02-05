@@ -2,8 +2,9 @@
 //  OrangeLineWidget.swift
 //  OrangeLineWidget
 //
-//  Watch face complication widget for Orange Line arrival times
-//  简化版：直接读取 App 写入的当前显示数据，与 ArrivalView 保持一致
+//  Watch face complication widget for VTA transit arrival times
+//  Supports all VTA lines (Orange, Blue, Green) with dynamic colors
+//  - Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
 //
 
 import WidgetKit
@@ -23,10 +24,48 @@ private enum WidgetStorageKeys {
     static let arrivalTimestamp2 = "widget_arrivalTimestamp2"  // 第二班车
     static let arrivalTimestamp3 = "widget_arrivalTimestamp3"  // 第三班车
     static let lastUpdateTime = "widget_lastUpdateTime"
+    
+    // Line-related keys (VTA All Lines support)
+    // - Validates: Requirements 9.1, 9.2, 9.3
+    static let lineId = "widget_lineId"
+    static let lineName = "widget_lineName"
+    static let lineColor = "widget_lineColor"  // Hex color string
+}
+
+// MARK: - Color Extension for Hex Support
+
+extension Color {
+    /// Creates a Color from a hex string
+    /// - Parameter hex: Hex color string (e.g., "#FF8C00" or "FF8C00")
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 255, 140, 0) // Default to orange
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
 }
 
 // MARK: - Timeline Entry
 
+/// Timeline entry for VTA transit widget
+/// - Validates: Requirements 9.1, 9.5
 struct OrangeLineEntry: TimelineEntry {
     let date: Date
     let stationName: String
@@ -35,6 +74,18 @@ struct OrangeLineEntry: TimelineEntry {
     let arrivalMinutes: Int?
     let isStale: Bool
     
+    // Line information (VTA All Lines support)
+    // - Validates: Requirements 9.1, 9.2, 9.3
+    let lineId: String
+    let lineName: String
+    let lineColorHex: String
+    
+    /// Computed property for line color
+    /// - Validates: Requirement 9.4
+    var lineColor: Color {
+        Color(hex: lineColorHex)
+    }
+    
     static var placeholder: OrangeLineEntry {
         OrangeLineEntry(
             date: Date(),
@@ -42,7 +93,10 @@ struct OrangeLineEntry: TimelineEntry {
             stationShortName: "MLPT",
             direction: "E",
             arrivalMinutes: 5,
-            isStale: false
+            isStale: false,
+            lineId: "Orange",
+            lineName: "Orange Line",
+            lineColorHex: "#FF8C00"
         )
     }
     
@@ -53,13 +107,18 @@ struct OrangeLineEntry: TimelineEntry {
             stationShortName: "--",
             direction: "--",
             arrivalMinutes: nil,
-            isStale: true
+            isStale: true,
+            lineId: "Orange",
+            lineName: "Orange Line",
+            lineColorHex: "#FF8C00"
         )
     }
 }
 
 // MARK: - Timeline Provider
 
+/// Timeline provider for VTA transit widget
+/// - Validates: Requirements 9.5, 9.6
 struct OrangeLineProvider: TimelineProvider {
     
     private var sharedDefaults: UserDefaults? {
@@ -92,7 +151,13 @@ struct OrangeLineProvider: TimelineProvider {
         let stationShortName = defaults.string(forKey: WidgetStorageKeys.stationShortName) ?? "--"
         let direction = defaults.string(forKey: WidgetStorageKeys.direction) ?? "--"
         
-        print("Widget: 🔄 Timeline refresh - Station: \(stationName), Direction: \(direction)")
+        // 读取线路信息 (VTA All Lines support)
+        // - Validates: Requirements 9.1, 9.2, 9.3
+        let lineId = defaults.string(forKey: WidgetStorageKeys.lineId) ?? "Orange"
+        let lineName = defaults.string(forKey: WidgetStorageKeys.lineName) ?? "Orange Line"
+        let lineColorHex = defaults.string(forKey: WidgetStorageKeys.lineColor) ?? "#FF8C00"
+        
+        print("Widget: 🔄 Timeline refresh - \(lineName) \(stationName) \(direction)")
         
         // 生成未来 60 分钟的 entries（每分钟一个，用于倒计时）
         var entries: [OrangeLineEntry] = []
@@ -135,7 +200,10 @@ struct OrangeLineProvider: TimelineProvider {
                 stationShortName: stationShortName,
                 direction: direction,
                 arrivalMinutes: arrivalMinutes,
-                isStale: isStale
+                isStale: isStale,
+                lineId: lineId,
+                lineName: lineName,
+                lineColorHex: lineColorHex
             )
             entries.append(entry)
         }
@@ -156,6 +224,11 @@ struct OrangeLineProvider: TimelineProvider {
         let stationName = defaults.string(forKey: WidgetStorageKeys.stationName) ?? "--"
         let stationShortName = defaults.string(forKey: WidgetStorageKeys.stationShortName) ?? "--"
         let direction = defaults.string(forKey: WidgetStorageKeys.direction) ?? "--"
+        
+        // 读取线路信息 (VTA All Lines support)
+        let lineId = defaults.string(forKey: WidgetStorageKeys.lineId) ?? "Orange"
+        let lineName = defaults.string(forKey: WidgetStorageKeys.lineName) ?? "Orange Line"
+        let lineColorHex = defaults.string(forKey: WidgetStorageKeys.lineColor) ?? "#FF8C00"
         
         // 计算到站时间（尝试 3 班车，自动切换到下一班）
         var arrivalMinutes: Int? = nil
@@ -188,7 +261,10 @@ struct OrangeLineProvider: TimelineProvider {
             stationShortName: stationShortName,
             direction: direction,
             arrivalMinutes: arrivalMinutes,
-            isStale: isStale
+            isStale: isStale,
+            lineId: lineId,
+            lineName: lineName,
+            lineColorHex: lineColorHex
         )
     }
 }
@@ -217,6 +293,8 @@ struct OrangeLineWidgetEntryView: View {
 
 // MARK: - Circular Complication
 
+/// Circular complication view with dynamic line color
+/// - Validates: Requirement 9.4
 struct CircularView: View {
     let entry: OrangeLineEntry
     
@@ -228,36 +306,70 @@ struct CircularView: View {
                 if let minutes = entry.arrivalMinutes {
                     Text("\(minutes)")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                        .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
                     Text(entry.isStale ? "旧" : "min")
                         .font(.system(size: 10))
                         .foregroundColor(entry.isStale ? .yellow : .secondary)
                 } else {
                     Text(entry.stationShortName)
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(.orange)
+                        .foregroundColor(entry.lineColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
-                    Text(entry.direction == "E" ? "→东" : "←西")
+                    Text(directionText)
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
             }
         }
     }
+    
+    /// Direction text based on line type
+    private var directionText: String {
+        switch entry.direction {
+        case "E": return "→东"
+        case "W": return "←西"
+        case "N": return "↑北"
+        case "S": return "↓南"
+        default: return entry.direction
+        }
+    }
 }
 
 // MARK: - Rectangular Complication
 
+/// Rectangular complication view with dynamic line color and direction
+/// - Validates: Requirements 9.4, 9.6
 struct RectangularView: View {
     let entry: OrangeLineEntry
     
+    /// Direction text based on line and direction
     private var directionText: String {
-        switch entry.direction {
-        case "E": return "→ Alum Rock"
-        case "W": return "← Mountain View"
-        default: return entry.direction
+        // Orange Line directions
+        if entry.lineId == "Orange" {
+            switch entry.direction {
+            case "E": return "→ Alum Rock"
+            case "W": return "← Mountain View"
+            default: return entry.direction
+            }
         }
+        // Blue Line directions
+        else if entry.lineId == "Blue" {
+            switch entry.direction {
+            case "N": return "↑ Baypointe"
+            case "S": return "↓ Santa Teresa"
+            default: return entry.direction
+            }
+        }
+        // Green Line directions
+        else if entry.lineId == "Green" {
+            switch entry.direction {
+            case "N": return "↑ Old Ironsides"
+            case "S": return "↓ Winchester"
+            default: return entry.direction
+            }
+        }
+        return entry.direction
     }
     
     var body: some View {
@@ -266,7 +378,7 @@ struct RectangularView: View {
                 HStack(spacing: 4) {
                     Text(entry.stationName)
                         .font(.headline)
-                        .foregroundColor(entry.isStale ? .orange.opacity(0.7) : .orange)
+                        .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.7) : entry.lineColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     
@@ -288,7 +400,7 @@ struct RectangularView: View {
                 VStack(alignment: .trailing) {
                     Text("\(minutes)")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                        .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
                     Text(entry.isStale ? "缓存" : "min")
                         .font(.caption2)
                         .foregroundColor(entry.isStale ? .yellow : .secondary)
@@ -305,11 +417,19 @@ struct RectangularView: View {
 
 // MARK: - Inline Complication
 
+/// Inline complication view with dynamic direction symbol
+/// - Validates: Requirement 9.6
 struct InlineView: View {
     let entry: OrangeLineEntry
     
     private var directionShort: String {
-        entry.direction == "E" ? "→" : "←"
+        switch entry.direction {
+        case "E": return "→"
+        case "W": return "←"
+        case "N": return "↑"
+        case "S": return "↓"
+        default: return entry.direction
+        }
     }
     
     var body: some View {
@@ -324,11 +444,19 @@ struct InlineView: View {
 
 // MARK: - Corner Complication
 
+/// Corner complication view with dynamic line color
+/// - Validates: Requirement 9.4
 struct CornerView: View {
     let entry: OrangeLineEntry
     
     private var directionShort: String {
-        entry.direction == "E" ? "→" : "←"
+        switch entry.direction {
+        case "E": return "→"
+        case "W": return "←"
+        case "N": return "↑"
+        case "S": return "↓"
+        default: return entry.direction
+        }
     }
     
     var body: some View {
@@ -337,7 +465,7 @@ struct CornerView: View {
                 VStack(spacing: 0) {
                     Text("\(minutes)")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(entry.isStale ? .orange.opacity(0.6) : .orange)
+                        .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
                     if entry.isStale {
                         Text("旧")
                             .font(.system(size: 8))
@@ -347,7 +475,7 @@ struct CornerView: View {
             } else {
                 Text(entry.stationShortName)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.orange)
+                    .foregroundColor(entry.lineColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             }
@@ -368,8 +496,8 @@ struct OrangeLineWidget: Widget {
             OrangeLineWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Orange Line")
-        .description("显示 VTA Orange Line 到站时间")
+        .configurationDisplayName("VTA Transit")
+        .description("显示 VTA 轻轨到站时间")
         .supportedFamilies([
             .accessoryCircular,
             .accessoryRectangular,
@@ -386,4 +514,28 @@ struct OrangeLineWidget: Widget {
 } timeline: {
     OrangeLineEntry.placeholder
     OrangeLineEntry.noData
+    // Blue Line preview
+    OrangeLineEntry(
+        date: Date(),
+        stationName: "Diridon",
+        stationShortName: "DIRD",
+        direction: "N",
+        arrivalMinutes: 3,
+        isStale: false,
+        lineId: "Blue",
+        lineName: "Blue Line",
+        lineColorHex: "#0066CC"
+    )
+    // Green Line preview
+    OrangeLineEntry(
+        date: Date(),
+        stationName: "Winchester",
+        stationShortName: "WNCH",
+        direction: "S",
+        arrivalMinutes: 8,
+        isStale: false,
+        lineId: "Green",
+        lineName: "Green Line",
+        lineColorHex: "#00AA00"
+    )
 }

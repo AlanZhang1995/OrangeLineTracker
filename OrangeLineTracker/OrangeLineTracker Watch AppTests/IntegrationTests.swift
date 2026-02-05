@@ -23,8 +23,14 @@ class IntegrationMockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var isSmartRefreshEnabled: Bool = true
     var cachedArrivalMinutes: Int?
     var lastUpdateTime: Date?
+    
+    // Line-related properties (VTA All Lines support)
+    var selectedLineId: String?
+    var favoriteLineIds: Set<String> = []
+    var cachedLines: [Line]?
     
     var saveCallCount = 0
     var loadCallCount = 0
@@ -38,10 +44,14 @@ class IntegrationMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil) {
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil, lineId: String? = nil, lineName: String? = nil, lineColor: String? = nil) {
         updateWidgetDataCallCount += 1
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
+    }
+    
+    func migrateFromV1IfNeeded() {
+        // Mock implementation - no-op for tests
     }
     
     func reset() {
@@ -51,6 +61,9 @@ class IntegrationMockStorageService: StorageServiceProtocol {
         isTimeRuleEnabled = false
         cachedArrivalMinutes = nil
         lastUpdateTime = nil
+        selectedLineId = nil
+        favoriteLineIds = []
+        cachedLines = nil
         saveCallCount = 0
         loadCallCount = 0
         updateWidgetDataCallCount = 0
@@ -95,11 +108,38 @@ class IntegrationMockTimeRuleService: TimeRuleServiceProtocol {
 
 /// Mock VTA service for integration testing with configurable responses
 class IntegrationMockVTAService: VTAServiceProtocol {
+    var mockLines: [Line] = []
+    var mockStations: [Station] = []
     var mockPredictions: [Prediction] = []
     var mockError: VTAServiceError?
     var lastRequestedStationId: String?
     var lastRequestedDirection: Direction?
+    var lastRequestedLineId: String?
+    var lastRequestedDirectionId: String?
     var fetchCallCount: Int = 0
+    var fetchLinesCallCount: Int = 0
+    var fetchStationsCallCount: Int = 0
+    
+    func fetchAllLines() async throws -> [Line] {
+        fetchLinesCallCount += 1
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockLines
+    }
+    
+    func fetchStations(for lineId: String) async throws -> [Station] {
+        fetchStationsCallCount += 1
+        lastRequestedLineId = lineId
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockStations
+    }
     
     func fetchPredictions(
         stationId: String,
@@ -108,6 +148,25 @@ class IntegrationMockVTAService: VTAServiceProtocol {
         fetchCallCount += 1
         lastRequestedStationId = stationId
         lastRequestedDirection = direction
+        lastRequestedLineId = "Orange"  // Default to Orange for backward compatibility
+        lastRequestedDirectionId = direction.directionId
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockPredictions
+    }
+    
+    func fetchPredictions(
+        lineId: String,
+        stationId: String,
+        directionId: String
+    ) async throws -> [Prediction] {
+        fetchCallCount += 1
+        lastRequestedLineId = lineId
+        lastRequestedStationId = stationId
+        lastRequestedDirectionId = directionId
         
         if let error = mockError {
             throw error
@@ -117,11 +176,17 @@ class IntegrationMockVTAService: VTAServiceProtocol {
     }
     
     func reset() {
+        mockLines = []
+        mockStations = []
         mockPredictions = []
         mockError = nil
         lastRequestedStationId = nil
         lastRequestedDirection = nil
+        lastRequestedLineId = nil
+        lastRequestedDirectionId = nil
         fetchCallCount = 0
+        fetchLinesCallCount = 0
+        fetchStationsCallCount = 0
     }
 }
 
@@ -181,8 +246,10 @@ struct EndToEndFlowIntegrationTests {
         // Step 3: Verify data was fetched
         // **Validates: Requirement 3.1 - fetch real-time arrival prediction data**
         #expect(mockVTAService.fetchCallCount >= 1)
-        #expect(mockVTAService.lastRequestedStationId == selectedStation.id)
-        #expect(mockVTAService.lastRequestedDirection == .mountainView)
+        // API uses platform ID (stationId(for: direction)) not the station's primary ID
+        #expect(mockVTAService.lastRequestedStationId == selectedStation.stationId(for: .mountainView))
+        // Now using multi-line API, check directionId instead of Direction enum
+        #expect(mockVTAService.lastRequestedDirectionId == "W")
         
         // Step 4: Verify predictions are displayed
         // **Validates: Requirement 4.1 - display next train arrival time**
@@ -222,7 +289,8 @@ struct EndToEndFlowIntegrationTests {
         
         // Verify preferences were loaded
         // **Validates: Requirement 7.3 - auto-load saved station and direction**
-        #expect(viewModel.selectedStation?.id == "70311")
+        // Lockheed Martin station's primary ID is its eastboundId "64791"
+        #expect(viewModel.selectedStation?.id == "64791")
         #expect(viewModel.selectedStation?.name == "Lockheed Martin")
         #expect(viewModel.selectedDirection == .alumRock)
         #expect(mockStorageService.loadCallCount == 1)
@@ -319,8 +387,10 @@ struct TimeRuleAutomaticSwitchingIntegrationTests {
         
         // Verify data was fetched for the new station
         // **Validates: Requirement 8.5 - auto-refresh when time rule takes effect**
-        #expect(mockVTAService.lastRequestedStationId == targetStation.id)
-        #expect(mockVTAService.lastRequestedDirection == .mountainView)
+        // API uses platform ID (stationId(for: direction)) not the station's primary ID
+        #expect(mockVTAService.lastRequestedStationId == targetStation.stationId(for: .mountainView))
+        // Now using multi-line API, check directionId instead of Direction enum
+        #expect(mockVTAService.lastRequestedDirectionId == "W")
     }
     
     @Test func timeRuleDisabledUsesManualSelection() async {
@@ -413,7 +483,8 @@ struct TimeRuleAutomaticSwitchingIntegrationTests {
         // **Validates: Requirement 8.2 - save rule's trigger time, station, and direction**
         #expect(mockTimeRuleService.addedRules.count == 1)
         #expect(mockTimeRuleService.addedRules[0].name == "Morning Commute")
-        #expect(mockTimeRuleService.addedRules[0].stationId == "70261")
+        // Mountain View station's primary ID is its eastboundId "64786"
+        #expect(mockTimeRuleService.addedRules[0].stationId == "64786")
         #expect(mockTimeRuleService.addedRules[0].direction == .alumRock)
         
         // Update the rule
@@ -908,7 +979,8 @@ struct DataFlowIntegrationTests {
         
         // Verify data was fetched with new direction
         #expect(mockVTAService.fetchCallCount > fetchCountAfterInitial)
-        #expect(mockVTAService.lastRequestedDirection == .mountainView)
+        // Now using multi-line API, check directionId instead of Direction enum
+        #expect(mockVTAService.lastRequestedDirectionId == "W")
     }
     
     @Test func preferencePersistenceAcrossViewModelInstances() async {
@@ -971,7 +1043,7 @@ struct StationDirectionDisplayIntegrationTests {
         
         // Verify last station is Alum Rock
         #expect(stations.last?.name == "Alum Rock")
-        #expect(stations.last?.order == 28)
+        #expect(stations.last?.order == 27)  // 28 stations, indexed 0-27
         
         // Verify all stations are in order
         for i in 0..<stations.count - 1 {
@@ -1008,8 +1080,8 @@ struct StationDirectionDisplayIntegrationTests {
     @Test func directionIdMapsCorrectly() {
         // **Validates: Direction ID maps correctly for API calls**
         
-        #expect(Direction.mountainView.directionId == "IB")
-        #expect(Direction.alumRock.directionId == "OB")
+        #expect(Direction.mountainView.directionId == "W")
+        #expect(Direction.alumRock.directionId == "E")
     }
 }
 
@@ -1187,11 +1259,12 @@ struct CompleteSystemIntegrationTests {
         viewModel.selectedStation = OrangeLineStations.stations[12]
         await viewModel.refreshPredictions()
         
-        // Create complication data from successful fetch
-        let successData = ComplicationData.from(
-            prediction: viewModel.nextPrediction,
-            station: viewModel.selectedStation,
-            direction: viewModel.selectedDirection
+        // Create complication data from successful fetch with an old timestamp to simulate stale data
+        let successData = ComplicationData(
+            stationShortName: viewModel.selectedStation?.shortName ?? "---",
+            minutesUntilArrival: viewModel.nextPrediction?.minutesUntilArrival,
+            direction: viewModel.selectedDirection ?? .alumRock,
+            lastUpdated: Date().addingTimeInterval(-10 * 60) // 10 minutes ago (stale)
         )
         
         let complicationController = ComplicationController()
@@ -1296,8 +1369,8 @@ struct CompleteSystemIntegrationTests {
             // Verify correct direction is selected
             #expect(viewModel.selectedDirection == direction)
             
-            // Verify correct direction was requested from API
-            #expect(mockVTAService.lastRequestedDirection == direction)
+            // Verify correct direction ID was requested from API (using multi-line API)
+            #expect(mockVTAService.lastRequestedDirectionId == direction.directionId)
             
             // Verify predictions have correct destination
             #expect(viewModel.nextPrediction?.destination == direction.displayName)

@@ -16,8 +16,14 @@ class ViewModelMockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var isSmartRefreshEnabled: Bool = true
     var cachedArrivalMinutes: Int?
     var lastUpdateTime: Date?
+    
+    // Line-related properties (VTA All Lines support)
+    var selectedLineId: String?
+    var favoriteLineIds: Set<String> = []
+    var cachedLines: [Line]?
     
     var saveCallCount = 0
     var loadCallCount = 0
@@ -31,10 +37,14 @@ class ViewModelMockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil) {
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil, lineId: String? = nil, lineName: String? = nil, lineColor: String? = nil) {
         updateWidgetDataCallCount += 1
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
+    }
+    
+    func migrateFromV1IfNeeded() {
+        // Mock implementation - no-op for tests
     }
     
     func reset() {
@@ -44,6 +54,9 @@ class ViewModelMockStorageService: StorageServiceProtocol {
         isTimeRuleEnabled = false
         cachedArrivalMinutes = nil
         lastUpdateTime = nil
+        selectedLineId = nil
+        favoriteLineIds = []
+        cachedLines = nil
         saveCallCount = 0
         loadCallCount = 0
         updateWidgetDataCallCount = 0
@@ -369,13 +382,15 @@ struct MetroViewModelRefreshPredictionsTests {
         
         let station = OrangeLineStations.stations[10]
         viewModel.selectedStation = station
-        viewModel.selectedDirection = .mountainView
+        viewModel.selectDirection(.mountainView)
         
         await viewModel.refreshPredictions()
         
         // Station ID should be the westbound ID since direction is mountainView
         #expect(mockVTAService.lastRequestedStationId == station.stationId(for: .mountainView))
-        #expect(mockVTAService.lastRequestedDirection == .mountainView)
+        // Now using the new multi-line API, check directionId instead of Direction enum
+        #expect(mockVTAService.lastRequestedDirectionId == "W")
+        #expect(mockVTAService.lastRequestedLineId == "Orange")
     }
 }
 
@@ -2069,5 +2084,361 @@ struct LoadingStateConsistencyPropertyTests {
                        "Should have error after failed refresh")
             }
         }
+    }
+}
+
+
+// MARK: - Multi-Line Support Property Tests
+
+/// Property-based tests for multi-line support in MetroViewModel
+/// **Feature: vta-all-lines**
+@MainActor
+struct MetroViewModelMultiLinePropertyTests {
+    
+    // MARK: - Random Data Generators
+    
+    /// Generates a random Line for testing
+    private func randomLine() -> Line {
+        let lines = [
+            Line(
+                id: "Orange",
+                name: "Orange Line",
+                shortName: "OL",
+                type: .lightRail,
+                colorHex: "#F7931E",
+                directions: [
+                    LineDirection(id: "E", headsign: "Alum Rock"),
+                    LineDirection(id: "W", headsign: "Mountain View")
+                ],
+                stations: OrangeLineStations.stations
+            ),
+            Line(
+                id: "Blue",
+                name: "Blue Line",
+                shortName: "BL",
+                type: .lightRail,
+                colorHex: "#0072BC",
+                directions: [
+                    LineDirection(id: "S", headsign: "Santa Teresa"),
+                    LineDirection(id: "N", headsign: "Baypointe")
+                ],
+                stations: BlueLineStations.stations
+            ),
+            Line(
+                id: "Green",
+                name: "Green Line",
+                shortName: "GL",
+                type: .lightRail,
+                colorHex: "#00A651",
+                directions: [
+                    LineDirection(id: "S", headsign: "Winchester"),
+                    LineDirection(id: "N", headsign: "Old Ironsides")
+                ],
+                stations: GreenLineStations.stations
+            )
+        ]
+        return lines.randomElement()!
+    }
+    
+    /// Generates a random station from a given line
+    private func randomStation(from line: Line) -> Station {
+        line.stations.randomElement()!
+    }
+    
+    /// Generates a random direction from a given line
+    private func randomDirection(from line: Line) -> LineDirection {
+        line.directions.randomElement()!
+    }
+    
+    // MARK: - Property 6: 站点地理顺序
+    
+    /// **Feature: vta-all-lines, Property 6: 站点地理顺序**
+    /// For any line's station list, stations must be sorted by order field in ascending order.
+    /// **Validates: Requirements 4.2**
+    @Test func property6_stationsAreSortedByGeographicOrder() {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line
+            let line = randomLine()
+            viewModel.selectLine(line)
+            
+            // Get the stations from the view model
+            let stations = viewModel.lineStations
+            
+            // Verify stations are sorted by order
+            for i in 0..<(stations.count - 1) {
+                #expect(stations[i].order < stations[i + 1].order,
+                       "Station at index \(i) (order: \(stations[i].order)) should have lower order than station at index \(i + 1) (order: \(stations[i + 1].order))")
+            }
+            
+            // Verify all stations belong to the selected line
+            for station in stations {
+                #expect(station.lineId == line.id,
+                       "Station '\(station.name)' should belong to line '\(line.id)', but has lineId '\(station.lineId)'")
+            }
+        }
+    }
+    
+    // MARK: - Property 7: 切换线路清除站点选择
+    
+    /// **Feature: vta-all-lines, Property 7: 切换线路清除站点选择**
+    /// For any state with a selected station, switching to a different line must clear the station selection
+    /// or set it to a station belonging to the new line.
+    /// **Validates: Requirements 4.5**
+    @Test func property7_switchingLineClearsStationSelection() async {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line and station
+            let firstLine = randomLine()
+            viewModel.selectLine(firstLine)
+            let firstStation = randomStation(from: firstLine)
+            viewModel.selectedStation = firstStation
+            
+            // Verify station is selected
+            #expect(viewModel.selectedStation != nil,
+                   "Station should be selected before switching lines")
+            
+            // Select a different line
+            var secondLine = randomLine()
+            while secondLine.id == firstLine.id {
+                secondLine = randomLine()
+            }
+            viewModel.selectLine(secondLine)
+            
+            // Verify station selection is cleared or belongs to new line
+            if let selectedStation = viewModel.selectedStation {
+                #expect(selectedStation.lineId == secondLine.id,
+                       "After switching lines, selected station should belong to new line '\(secondLine.id)', but has lineId '\(selectedStation.lineId)'")
+            } else {
+                // Station is nil, which is also valid
+                #expect(viewModel.selectedStation == nil,
+                       "Station selection should be cleared after switching lines")
+            }
+            
+            // Verify predictions are cleared
+            #expect(viewModel.predictions.isEmpty,
+                   "Predictions should be cleared after switching lines")
+        }
+    }
+    
+    /// **Feature: vta-all-lines, Property 7: 切换线路清除站点选择**
+    /// Switching to the same line should not clear the station selection.
+    /// **Validates: Requirements 4.5**
+    @Test func property7_selectingSameLineDoesNotClearStation() async {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line and station
+            let line = randomLine()
+            viewModel.selectLine(line)
+            let station = randomStation(from: line)
+            viewModel.selectedStation = station
+            
+            // Verify station is selected
+            #expect(viewModel.selectedStation?.id == station.id,
+                   "Station should be selected before re-selecting same line")
+            
+            // Select the same line again
+            viewModel.selectLine(line)
+            
+            // Verify station selection is preserved
+            #expect(viewModel.selectedStation?.id == station.id,
+                   "Station selection should be preserved when selecting the same line")
+        }
+    }
+    
+    // MARK: - Property 8: 方向使用终点站名称
+    
+    /// **Feature: vta-all-lines, Property 8: 方向使用终点站名称**
+    /// For any line's direction options, the display text must equal the headsign field value.
+    /// **Validates: Requirements 5.2**
+    @Test func property8_directionDisplayUsesHeadsign() {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line
+            let line = randomLine()
+            viewModel.selectLine(line)
+            
+            // Select a random direction from the line
+            let direction = randomDirection(from: line)
+            viewModel.selectDirection(byId: direction.id)
+            
+            // Verify the current direction headsign matches the selected direction
+            #expect(viewModel.currentDirectionHeadsign == direction.headsign,
+                   "Current direction headsign '\(viewModel.currentDirectionHeadsign)' should equal selected direction headsign '\(direction.headsign)'")
+        }
+    }
+    
+    /// **Feature: vta-all-lines, Property 8: 方向使用终点站名称**
+    /// For any line, the lineDirections computed property should return the line's directions.
+    /// **Validates: Requirements 5.2**
+    @Test func property8_lineDirectionsMatchSelectedLine() {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line
+            let line = randomLine()
+            viewModel.selectLine(line)
+            
+            // Verify lineDirections matches the selected line's directions
+            let viewModelDirections = viewModel.lineDirections
+            #expect(viewModelDirections.count == line.directions.count,
+                   "lineDirections count \(viewModelDirections.count) should equal line directions count \(line.directions.count)")
+            
+            for (index, direction) in viewModelDirections.enumerated() {
+                #expect(direction.id == line.directions[index].id,
+                       "Direction ID at index \(index) should match")
+                #expect(direction.headsign == line.directions[index].headsign,
+                       "Direction headsign at index \(index) should match")
+            }
+        }
+    }
+    
+    /// **Feature: vta-all-lines, Property 8: 方向使用终点站名称**
+    /// Each line should have exactly two directions.
+    /// **Validates: Requirements 5.2**
+    @Test func property8_eachLineHasTwoDirections() {
+        // Run 100 iterations with random data
+        for _ in 0..<100 {
+            let mockVTAService = MockVTAService()
+            let mockStorageService = ViewModelMockStorageService()
+            let mockTimeRuleService = ViewModelMockTimeRuleService()
+            
+            let viewModel = MetroViewModel(
+                vtaService: mockVTAService,
+                storageService: mockStorageService,
+                timeRuleService: mockTimeRuleService
+            )
+            
+            // Select a random line
+            let line = randomLine()
+            viewModel.selectLine(line)
+            
+            // Verify the line has exactly two directions
+            #expect(viewModel.lineDirections.count == 2,
+                   "Line '\(line.name)' should have exactly 2 directions, but has \(viewModel.lineDirections.count)")
+        }
+    }
+    
+    // MARK: - Additional Multi-Line Tests
+    
+    /// Test that selecting a station from a different line is rejected
+    @Test func selectingStationFromDifferentLineIsRejected() async {
+        let mockVTAService = MockVTAService()
+        let mockStorageService = ViewModelMockStorageService()
+        let mockTimeRuleService = ViewModelMockTimeRuleService()
+        
+        let viewModel = MetroViewModel(
+            vtaService: mockVTAService,
+            storageService: mockStorageService,
+            timeRuleService: mockTimeRuleService
+        )
+        
+        // Select Orange Line
+        let orangeLine = Line(
+            id: "Orange",
+            name: "Orange Line",
+            shortName: "OL",
+            type: .lightRail,
+            colorHex: "#F7931E",
+            directions: [
+                LineDirection(id: "E", headsign: "Alum Rock"),
+                LineDirection(id: "W", headsign: "Mountain View")
+            ],
+            stations: OrangeLineStations.stations
+        )
+        viewModel.selectLine(orangeLine)
+        
+        // Try to select a Blue Line station
+        let blueStation = BlueLineStations.stations[0]
+        viewModel.selectStation(blueStation)
+        
+        // Station should not be selected because it doesn't belong to Orange Line
+        #expect(viewModel.selectedStation == nil,
+               "Station from different line should not be selected")
+    }
+    
+    /// Test that line display properties are correct
+    @Test func lineDisplayPropertiesAreCorrect() {
+        let mockVTAService = MockVTAService()
+        let mockStorageService = ViewModelMockStorageService()
+        let mockTimeRuleService = ViewModelMockTimeRuleService()
+        
+        let viewModel = MetroViewModel(
+            vtaService: mockVTAService,
+            storageService: mockStorageService,
+            timeRuleService: mockTimeRuleService
+        )
+        
+        // Initially no line selected
+        #expect(viewModel.lineDisplayName == "选择线路")
+        #expect(viewModel.lineShortName == "--")
+        
+        // Select a line
+        let line = Line(
+            id: "Orange",
+            name: "Orange Line",
+            shortName: "OL",
+            type: .lightRail,
+            colorHex: "#F7931E",
+            directions: [
+                LineDirection(id: "E", headsign: "Alum Rock"),
+                LineDirection(id: "W", headsign: "Mountain View")
+            ],
+            stations: OrangeLineStations.stations
+        )
+        viewModel.selectLine(line)
+        
+        #expect(viewModel.lineDisplayName == "Orange Line")
+        #expect(viewModel.lineShortName == "OL")
+        #expect(viewModel.lineColorHex == "#F7931E")
     }
 }

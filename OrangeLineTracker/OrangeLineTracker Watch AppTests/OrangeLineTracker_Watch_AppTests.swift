@@ -64,7 +64,6 @@ struct StationModelTests {
         // Westbound (Mountain View direction) should return westboundId
         #expect(station.stationId(for: .mountainView) == "64821")
     }
-    }
 }
 
 // MARK: - OrangeLineStations Tests
@@ -951,10 +950,11 @@ struct TimeRuleModelTests {
     // MARK: - Station Lookup Tests
     
     @Test func stationReturnsCorrectStationForValidId() {
+        // Mountain View station's primary ID is its eastboundId "64786"
         let rule = TimeRule(
             name: "Test",
             triggerTime: Date(),
-            stationId: "70261",
+            stationId: "64786",
             direction: .alumRock
         )
         
@@ -1257,7 +1257,7 @@ struct StationSortingPropertyTests {
     }
     
     /// **Validates: Property 1**
-    /// Verify that Mountain View is always first (order=0) and Alum Rock is always last (order=28)
+    /// Verify that Mountain View is always first (order=0) and Alum Rock is always last (order=27)
     @Test func property1_boundaryStationsAreCorrect() {
         // Run 100 iterations to verify boundary conditions
         for iteration in 0..<100 {
@@ -1274,14 +1274,14 @@ struct StationSortingPropertyTests {
                 "Iteration \(iteration): First station should have order 0"
             )
             
-            // Last station should always be Alum Rock with order 28
+            // Last station should always be Alum Rock with order 27 (28 stations, indexed 0-27)
             #expect(
                 sortedStations.last?.name == "Alum Rock",
                 "Iteration \(iteration): Last station should be Alum Rock"
             )
             #expect(
-                sortedStations.last?.order == 28,
-                "Iteration \(iteration): Last station should have order 28"
+                sortedStations.last?.order == 27,
+                "Iteration \(iteration): Last station should have order 27"
             )
         }
     }

@@ -2,45 +2,80 @@
 //  DirectionPickerView.swift
 //  OrangeLineTracker Watch App
 //
-//  Reusable direction picker component for selecting travel direction on the Orange Line
-//  - Validates: Requirements 2.1, 2.2, 2.4, 6.3
+//  Reusable direction picker component for selecting travel direction on VTA lines
+//  - Validates: Requirements 5.1, 5.2, 5.5
 //
 
 import SwiftUI
 
 // MARK: - DirectionPickerView
 
-/// A reusable view component for selecting the travel direction on the VTA Orange Line
+/// A reusable view component for selecting the travel direction on VTA lines
+/// Supports both the legacy Direction enum (for backward compatibility) and LineDirection data
 /// Can be used in multiple places throughout the app (ArrivalView header, SettingsView, etc.)
-/// - Validates: Requirements 2.1 (display two direction options), 2.2 (set selected direction on tap),
-///              2.4 (use clear icons or text to identify direction), 6.3 (use simple buttons or segmented control)
+/// - Validates: Requirements 5.1 (display direction options), 5.2 (use terminal station names),
+///              5.5 (maintain existing direction switching UI)
 struct DirectionPickerView: View {
     
     // MARK: - Properties
     
-    /// Binding to the currently selected direction
-    @Binding var selectedDirection: Direction
+    /// Binding to the currently selected direction ID (e.g., "E", "W", "N", "S")
+    @Binding var selectedDirectionId: String
+    
+    /// The available directions for the current line
+    /// If nil, falls back to default Orange Line directions
+    var lineDirections: [LineDirection]?
     
     /// Optional callback when direction changes
-    var onDirectionChanged: ((Direction) -> Void)?
+    var onDirectionChanged: ((String) -> Void)?
     
     /// Display style for the picker
     var style: DirectionPickerStyle
     
+    /// Line color for theming (hex string)
+    var lineColorHex: String
+    
+    // MARK: - Computed Properties
+    
+    /// The effective directions to display
+    /// Falls back to Orange Line directions if lineDirections is nil
+    private var effectiveDirections: [LineDirection] {
+        lineDirections ?? [
+            LineDirection(id: "E", headsign: "Alum Rock"),
+            LineDirection(id: "W", headsign: "Mountain View")
+        ]
+    }
+    
+    /// The line color as a SwiftUI Color
+    private var lineColor: Color {
+        Color(hex: lineColorHex) ?? .orange
+    }
+    
+    /// The currently selected direction
+    private var selectedLineDirection: LineDirection? {
+        effectiveDirections.first { $0.id == selectedDirectionId }
+    }
+    
     // MARK: - Initialization
     
-    /// Creates a DirectionPickerView
+    /// Creates a DirectionPickerView with LineDirection support
     /// - Parameters:
-    ///   - selectedDirection: Binding to the selected direction
+    ///   - selectedDirectionId: Binding to the selected direction ID
+    ///   - lineDirections: The available directions for the current line (optional)
     ///   - style: The display style (default: .segmented)
+    ///   - lineColorHex: The line color in hex format (default: Orange Line color)
     ///   - onDirectionChanged: Optional callback when direction changes
     init(
-        selectedDirection: Binding<Direction>,
+        selectedDirectionId: Binding<String>,
+        lineDirections: [LineDirection]? = nil,
         style: DirectionPickerStyle = .segmented,
-        onDirectionChanged: ((Direction) -> Void)? = nil
+        lineColorHex: String = "#F7931E",
+        onDirectionChanged: ((String) -> Void)? = nil
     ) {
-        self._selectedDirection = selectedDirection
+        self._selectedDirectionId = selectedDirectionId
+        self.lineDirections = lineDirections
         self.style = style
+        self.lineColorHex = lineColorHex
         self.onDirectionChanged = onDirectionChanged
     }
     
@@ -62,7 +97,7 @@ struct DirectionPickerView: View {
     // MARK: - Segmented Picker View
     
     /// Wheel picker style for watchOS (segmented is not available on watchOS)
-    /// - Validates: Requirement 6.3 - use picker for direction switching
+    /// - Validates: Requirement 5.1 - display direction options
     private var segmentedPickerView: some View {
         VStack(spacing: 8) {
             // Direction label
@@ -71,20 +106,20 @@ struct DirectionPickerView: View {
                 .foregroundColor(.secondary)
             
             // Wheel picker (watchOS compatible)
-            // Validates: Requirement 2.1 - display two direction options
-            Picker("方向", selection: $selectedDirection) {
-                ForEach(Direction.allCases, id: \.self) { direction in
+            // Validates: Requirement 5.1 - display direction options
+            Picker("方向", selection: $selectedDirectionId) {
+                ForEach(effectiveDirections, id: \.id) { direction in
                     HStack(spacing: 4) {
                         Image(systemName: direction.iconName)
-                        Text(direction.shortDisplayName)
+                        // Validates: Requirement 5.2 - use terminal station names
+                        Text(direction.shortHeadsign)
                     }
-                    .tag(direction)
+                    .tag(direction.id)
                 }
             }
             .pickerStyle(.wheel)
             .frame(height: 60)
-            .onChange(of: selectedDirection) { _, newValue in
-                // Validates: Requirement 2.2 - set selected direction on tap
+            .onChange(of: selectedDirectionId) { _, newValue in
                 onDirectionChanged?(newValue)
             }
         }
@@ -93,7 +128,7 @@ struct DirectionPickerView: View {
     // MARK: - Buttons Picker View
     
     /// Button-based picker with icons and text
-    /// - Validates: Requirements 2.1, 2.2, 2.4, 6.3
+    /// - Validates: Requirements 5.1, 5.2, 5.5
     private var buttonsPickerView: some View {
         VStack(spacing: 8) {
             // Direction label
@@ -102,16 +137,16 @@ struct DirectionPickerView: View {
                 .foregroundColor(.secondary)
             
             // Direction buttons
-            // Validates: Requirement 2.1 - display two direction options
+            // Validates: Requirement 5.1 - display direction options
             HStack(spacing: 12) {
-                ForEach(Direction.allCases, id: \.self) { direction in
-                    DirectionButton(
+                ForEach(effectiveDirections, id: \.id) { direction in
+                    LineDirectionButton(
                         direction: direction,
-                        isSelected: selectedDirection == direction,
+                        isSelected: selectedDirectionId == direction.id,
+                        lineColor: lineColor,
                         action: {
-                            // Validates: Requirement 2.2 - set selected direction on tap
-                            selectedDirection = direction
-                            onDirectionChanged?(direction)
+                            selectedDirectionId = direction.id
+                            onDirectionChanged?(direction.id)
                         }
                     )
                 }
@@ -122,33 +157,32 @@ struct DirectionPickerView: View {
     // MARK: - Compact Picker View
     
     /// Compact single-line picker for use in headers
-    /// - Validates: Requirements 2.1, 2.2, 2.4
+    /// - Validates: Requirements 5.1, 5.2, 5.5
     private var compactPickerView: some View {
         HStack(spacing: 8) {
-            ForEach(Direction.allCases, id: \.self) { direction in
+            ForEach(effectiveDirections, id: \.id) { direction in
                 Button(action: {
-                    // Validates: Requirement 2.2 - set selected direction on tap
-                    selectedDirection = direction
-                    onDirectionChanged?(direction)
+                    selectedDirectionId = direction.id
+                    onDirectionChanged?(direction.id)
                 }) {
                     HStack(spacing: 4) {
-                        // Validates: Requirement 2.4 - use clear icons to identify direction
                         Image(systemName: direction.iconName)
                             .font(.caption2)
-                        Text(direction.shortDisplayName)
+                        // Validates: Requirement 5.2 - use terminal station names
+                        Text(direction.shortHeadsign)
                             .font(.caption2)
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(selectedDirection == direction 
-                                  ? Color.orange 
-                                  : Color.orange.opacity(0.2))
+                            .fill(selectedDirectionId == direction.id 
+                                  ? lineColor 
+                                  : lineColor.opacity(0.2))
                     )
-                    .foregroundColor(selectedDirection == direction 
+                    .foregroundColor(selectedDirectionId == direction.id 
                                      ? .white 
-                                     : .orange)
+                                     : lineColor)
                 }
                 .buttonStyle(.plain)
             }
@@ -158,28 +192,33 @@ struct DirectionPickerView: View {
     // MARK: - Inline Picker View
     
     /// Inline picker for use within lists or forms
-    /// - Validates: Requirements 2.1, 2.2, 2.4
+    /// - Validates: Requirements 5.1, 5.2, 5.5
     private var inlinePickerView: some View {
         HStack {
-            // Validates: Requirement 2.4 - use clear icons to identify direction
-            Image(systemName: selectedDirection.iconName)
-                .foregroundColor(.orange)
-            
-            Text(selectedDirection.displayName)
-                .foregroundColor(.primary)
+            if let currentDirection = selectedLineDirection {
+                Image(systemName: currentDirection.iconName)
+                    .foregroundColor(lineColor)
+                
+                // Validates: Requirement 5.2 - use terminal station names
+                Text(currentDirection.headsign)
+                    .foregroundColor(.primary)
+            }
             
             Spacer()
             
             // Toggle button
             Button(action: {
-                // Validates: Requirement 2.2 - toggle direction on tap
-                let newDirection: Direction = selectedDirection == .mountainView ? .alumRock : .mountainView
-                selectedDirection = newDirection
-                onDirectionChanged?(newDirection)
+                // Toggle to the other direction
+                if let currentIndex = effectiveDirections.firstIndex(where: { $0.id == selectedDirectionId }) {
+                    let nextIndex = (currentIndex + 1) % effectiveDirections.count
+                    let newDirectionId = effectiveDirections[nextIndex].id
+                    selectedDirectionId = newDirectionId
+                    onDirectionChanged?(newDirectionId)
+                }
             }) {
                 Image(systemName: "arrow.left.arrow.right")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(lineColor)
             }
             .buttonStyle(.plain)
         }
@@ -200,16 +239,19 @@ enum DirectionPickerStyle {
     case inline
 }
 
-// MARK: - DirectionButton
+// MARK: - LineDirectionButton
 
-/// Individual direction button component
-/// - Validates: Requirements 2.2, 2.4
-struct DirectionButton: View {
+/// Individual direction button component for LineDirection
+/// - Validates: Requirements 5.2, 5.5
+struct LineDirectionButton: View {
     /// The direction this button represents
-    let direction: Direction
+    let direction: LineDirection
     
     /// Whether this direction is currently selected
     let isSelected: Bool
+    
+    /// The line color for theming
+    let lineColor: Color
     
     /// Action to perform when button is tapped
     let action: () -> Void
@@ -218,40 +260,83 @@ struct DirectionButton: View {
         Button(action: action) {
             VStack(spacing: 6) {
                 // Direction icon
-                // Validates: Requirement 2.4 - use clear icons to identify direction
                 Image(systemName: direction.iconName)
                     .font(.title3)
-                    .foregroundColor(isSelected ? .white : .orange)
+                    .foregroundColor(isSelected ? .white : lineColor)
                 
-                // Direction text
-                // Validates: Requirement 2.4 - use clear text to identify direction
-                Text(direction.shortDisplayName)
+                // Direction text - use terminal station name
+                // Validates: Requirement 5.2 - use terminal station names
+                Text(direction.shortHeadsign)
                     .font(.caption2)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? .white : .orange)
+                    .foregroundColor(isSelected ? .white : lineColor)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.orange : Color.orange.opacity(0.15))
+                    .fill(isSelected ? lineColor : lineColor.opacity(0.15))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.orange, lineWidth: isSelected ? 0 : 1)
+                    .stroke(lineColor, lineWidth: isSelected ? 0 : 1)
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(direction.displayName), \(isSelected ? "已选择" : "未选择")")
+        .accessibilityLabel("\(direction.headsign), \(isSelected ? "已选择" : "未选择")")
         .accessibilityHint(isSelected ? "当前选中的方向" : "双击选择此方向")
     }
 }
 
-// MARK: - Direction Extension
+// MARK: - LineDirection Extension
+
+extension LineDirection {
+    /// Icon name for the direction based on direction ID
+    /// - Validates: Requirement 5.2 - use clear icons to identify direction
+    var iconName: String {
+        switch id.uppercased() {
+        case "W":
+            return "arrow.left"
+        case "E":
+            return "arrow.right"
+        case "N":
+            return "arrow.up"
+        case "S":
+            return "arrow.down"
+        default:
+            return "arrow.right"
+        }
+    }
+    
+    /// Short headsign for compact views (first 3 characters or abbreviation)
+    var shortHeadsign: String {
+        // Common abbreviations for VTA stations
+        let abbreviations: [String: String] = [
+            "Mountain View": "MTV",
+            "Alum Rock": "ALR",
+            "Winchester": "WIN",
+            "Santa Teresa": "STA",
+            "Baypointe": "BAY",
+            "Old Ironsides": "OIS"
+        ]
+        
+        if let abbr = abbreviations[headsign] {
+            return abbr
+        }
+        
+        // For other stations, use first 3 characters
+        if headsign.count > 3 {
+            return String(headsign.prefix(3)).uppercased()
+        }
+        return headsign.uppercased()
+    }
+}
+
+// MARK: - Direction Extension (Backward Compatibility)
 
 extension Direction {
     /// Icon name for the direction
-    /// - Validates: Requirement 2.4 - use clear icons to identify direction
+    /// - Validates: Requirement 5.2 - use clear icons to identify direction
     var iconName: String {
         switch self {
         case .mountainView:
@@ -272,33 +357,92 @@ extension Direction {
     }
 }
 
+// MARK: - Backward Compatible DirectionPickerView
+
+/// Backward compatible initializer using Direction enum
+/// This allows existing code to continue working without modification
+extension DirectionPickerView {
+    /// Creates a DirectionPickerView with backward compatible Direction binding
+    /// - Parameters:
+    ///   - selectedDirection: Binding to the selected Direction enum
+    ///   - style: The display style (default: .segmented)
+    ///   - onDirectionChanged: Optional callback when direction changes (receives Direction)
+    init(
+        selectedDirection: Binding<Direction>,
+        style: DirectionPickerStyle = .segmented,
+        onDirectionChanged: ((Direction) -> Void)? = nil
+    ) {
+        // Create a binding that converts between Direction and String
+        let directionIdBinding = Binding<String>(
+            get: { selectedDirection.wrappedValue.directionId },
+            set: { newId in
+                if newId == "W" {
+                    selectedDirection.wrappedValue = .mountainView
+                } else {
+                    selectedDirection.wrappedValue = .alumRock
+                }
+            }
+        )
+        
+        self._selectedDirectionId = directionIdBinding
+        self.lineDirections = nil  // Use default Orange Line directions
+        self.style = style
+        self.lineColorHex = "#F7931E"  // Orange Line color
+        
+        // Wrap the callback to convert String back to Direction
+        if let callback = onDirectionChanged {
+            self.onDirectionChanged = { directionId in
+                let direction: Direction = directionId == "W" ? .mountainView : .alumRock
+                callback(direction)
+            }
+        } else {
+            self.onDirectionChanged = nil
+        }
+    }
+}
+
 // MARK: - Preview
 
-#Preview("Segmented Style") {
+#Preview("Segmented Style - Orange Line") {
     DirectionPickerView(
-        selectedDirection: .constant(.alumRock),
-        style: .segmented
+        selectedDirectionId: .constant("E"),
+        lineDirections: [
+            LineDirection(id: "E", headsign: "Alum Rock"),
+            LineDirection(id: "W", headsign: "Mountain View")
+        ],
+        style: .segmented,
+        lineColorHex: "#F7931E"
     )
     .padding()
 }
 
-#Preview("Buttons Style") {
+#Preview("Buttons Style - Blue Line") {
     DirectionPickerView(
-        selectedDirection: .constant(.mountainView),
-        style: .buttons
+        selectedDirectionId: .constant("N"),
+        lineDirections: [
+            LineDirection(id: "N", headsign: "Baypointe"),
+            LineDirection(id: "S", headsign: "Santa Teresa")
+        ],
+        style: .buttons,
+        lineColorHex: "#0072BC"
     )
     .padding()
 }
 
-#Preview("Compact Style") {
+#Preview("Compact Style - Green Line") {
     DirectionPickerView(
-        selectedDirection: .constant(.alumRock),
-        style: .compact
+        selectedDirectionId: .constant("N"),
+        lineDirections: [
+            LineDirection(id: "N", headsign: "Old Ironsides"),
+            LineDirection(id: "S", headsign: "Winchester")
+        ],
+        style: .compact,
+        lineColorHex: "#008752"
     )
     .padding()
 }
 
-#Preview("Inline Style") {
+#Preview("Inline Style - Backward Compatible") {
     DirectionPickerView(
         selectedDirection: .constant(.mountainView),
         style: .inline

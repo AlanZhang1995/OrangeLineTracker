@@ -52,17 +52,45 @@ enum VTAServiceError: Error, LocalizedError, Equatable {
 // MARK: - VTAServiceProtocol
 
 /// Protocol defining the VTA service interface
-/// - Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5
+/// - Validates: Requirements 1.4, 3.1, 3.2, 3.3, 3.4, 3.5, 6.1, 6.2, 6.3, 6.4
 protocol VTAServiceProtocol {
-    /// Fetches arrival predictions for a specific station and direction
+    /// Fetches all available VTA lines
+    /// - Returns: An array of Line objects representing all VTA lines
+    /// - Throws: VTAServiceError if the request fails
+    /// - Validates: Requirements 1.4, 6.1
+    func fetchAllLines() async throws -> [Line]
+    
+    /// Fetches stations for a specific line
+    /// - Parameter lineId: The line identifier
+    /// - Returns: An array of Station objects for the specified line
+    /// - Throws: VTAServiceError if the request fails
+    /// - Validates: Requirements 6.2
+    func fetchStations(for lineId: String) async throws -> [Station]
+    
+    /// Fetches arrival predictions for a specific station and direction (backward compatible)
     /// - Parameters:
     ///   - stationId: The 511.org stop code for the station
     ///   - direction: The travel direction (Mountain View or Alum Rock)
     /// - Returns: An array of Prediction objects sorted by arrival time
     /// - Throws: VTAServiceError if the request fails
+    /// - Note: This method defaults to Orange Line for backward compatibility
     func fetchPredictions(
         stationId: String,
         direction: Direction
+    ) async throws -> [Prediction]
+    
+    /// Fetches arrival predictions for any line, station, and direction
+    /// - Parameters:
+    ///   - lineId: The line identifier (e.g., "Orange", "Blue", "Green")
+    ///   - stationId: The 511.org stop code for the station
+    ///   - directionId: The direction identifier (e.g., "E", "W", "N", "S")
+    /// - Returns: An array of Prediction objects sorted by arrival time
+    /// - Throws: VTAServiceError if the request fails
+    /// - Validates: Requirements 6.1, 6.4
+    func fetchPredictions(
+        lineId: String,
+        stationId: String,
+        directionId: String
     ) async throws -> [Prediction]
 }
 
@@ -108,7 +136,7 @@ struct MonitoredCall: Codable {
 // MARK: - VTAService
 
 /// Implementation of VTAServiceProtocol using 511.org SIRI StopMonitoring API
-/// - Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5
+/// - Validates: Requirements 1.4, 3.1, 3.2, 3.3, 3.4, 3.5, 6.1, 6.2, 6.3
 class VTAService: VTAServiceProtocol {
     
     // MARK: - Constants
@@ -121,6 +149,53 @@ class VTAService: VTAServiceProtocol {
     
     /// VTA agency identifier
     private static let agencyId = "SC"
+    
+    // MARK: - Static Line Data
+    
+    /// Static VTA light rail line definitions
+    /// Since 511.org API doesn't provide a simple lines endpoint, we define the lines statically
+    /// - Validates: Requirements 1.4, 6.1
+    private static let vtaLines: [Line] = [
+        // Orange Line: Mountain View ↔ Alum Rock
+        Line(
+            id: "Orange",
+            name: "Orange Line",
+            shortName: "OL",
+            type: .lightRail,
+            colorHex: "#F7931E",
+            directions: [
+                LineDirection(id: "E", headsign: "Alum Rock"),
+                LineDirection(id: "W", headsign: "Mountain View")
+            ],
+            stations: OrangeLineStations.stations
+        ),
+        // Blue Line: Baypointe ↔ Santa Teresa
+        Line(
+            id: "Blue",
+            name: "Blue Line",
+            shortName: "BL",
+            type: .lightRail,
+            colorHex: "#0072BC",
+            directions: [
+                LineDirection(id: "S", headsign: "Santa Teresa"),
+                LineDirection(id: "N", headsign: "Baypointe")
+            ],
+            stations: BlueLineStations.stations
+        ),
+        // Green Line: Old Ironsides ↔ Winchester
+        Line(
+            id: "Green",
+            name: "Green Line",
+            shortName: "GL",
+            type: .lightRail,
+            colorHex: "#00A651",
+            directions: [
+                LineDirection(id: "S", headsign: "Winchester"),
+                LineDirection(id: "N", headsign: "Old Ironsides")
+            ],
+            stations: GreenLineStations.stations
+        )
+    ]
     
     // MARK: - Properties
     
@@ -150,13 +225,57 @@ class VTAService: VTAServiceProtocol {
         self.dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     }
     
-    // MARK: - VTAServiceProtocol
+    // MARK: - VTAServiceProtocol - Line Methods
     
-    /// Fetches arrival predictions for a specific station and direction
+    /// Fetches all available VTA lines
+    /// Returns static line data since 511.org API doesn't provide a simple lines endpoint
+    /// - Returns: An array of Line objects representing all VTA lines
+    /// - Throws: VTAServiceError if the request fails
+    /// - Validates: Requirements 1.4, 6.1
+    func fetchAllLines() async throws -> [Line] {
+        // Return static line data
+        // In the future, this could be enhanced to fetch from an API
+        return Self.vtaLines
+    }
+    
+    /// Fetches stations for a specific line
+    /// - Parameter lineId: The line identifier (e.g., "Orange", "Blue", "Green")
+    /// - Returns: An array of Station objects for the specified line, sorted by order
+    /// - Throws: VTAServiceError if the line is not found
+    /// - Validates: Requirements 6.2
+    func fetchStations(for lineId: String) async throws -> [Station] {
+        // Find the line by ID
+        guard let line = Self.vtaLines.first(where: { $0.id == lineId }) else {
+            throw VTAServiceError.noDataAvailable
+        }
+        
+        // Return stations sorted by order (geographic order)
+        return line.stations.sorted { $0.order < $1.order }
+    }
+    
+    // MARK: - VTAServiceProtocol - Prediction Methods
+    
+    /// Fetches arrival predictions for a specific station and direction (backward compatible)
+    /// This method defaults to Orange Line for backward compatibility
     /// - Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5
     func fetchPredictions(
         stationId: String,
         direction: Direction
+    ) async throws -> [Prediction] {
+        // Call the new method with Orange Line as default for backward compatibility
+        return try await fetchPredictions(
+            lineId: "Orange",
+            stationId: stationId,
+            directionId: direction.directionId
+        )
+    }
+    
+    /// Fetches arrival predictions for any line, station, and direction
+    /// - Validates: Requirements 6.1, 6.4
+    func fetchPredictions(
+        lineId: String,
+        stationId: String,
+        directionId: String
     ) async throws -> [Prediction] {
         // Build the API URL
         // Validates: Requirements 3.2 - use VTA real-time data API endpoint
@@ -194,9 +313,9 @@ class VTAService: VTAServiceProtocol {
             )
         }
         
-        // Parse the response
-        // Validates: Requirements 3.3 - parse response and extract Orange Line train info
-        let predictions = try parseResponse(data: data, direction: direction)
+        // Parse the response with the specified line ID and direction ID
+        // Validates: Requirements 6.1, 6.4 - filter by line ID
+        let predictions = try parseResponse(data: data, lineId: lineId, directionId: directionId)
         
         // Check if we have any predictions
         // Validates: Requirements 5.3 - handle no data available
@@ -222,8 +341,13 @@ class VTAService: VTAServiceProtocol {
     }
     
     /// Parses the SIRI API response and extracts predictions
-    /// - Validates: Requirements 3.3, 3.4 - parse response and filter by direction
-    private func parseResponse(data: Data, direction: Direction) throws -> [Prediction] {
+    /// - Parameters:
+    ///   - data: The raw API response data
+    ///   - lineId: The line identifier to filter by (e.g., "Orange", "Blue", "Green")
+    ///   - directionId: The direction identifier to filter by (e.g., "E", "W", "N", "S")
+    /// - Returns: An array of Prediction objects sorted by arrival time
+    /// - Validates: Requirements 6.1, 6.4 - filter by line ID and direction
+    private func parseResponse(data: Data, lineId: String, directionId: String) throws -> [Prediction] {
         // Parse JSON response
         let siriResponse: SIRIResponse
         do {
@@ -237,19 +361,23 @@ class VTAService: VTAServiceProtocol {
             return []
         }
         
+        // Build the line reference string for filtering
+        // The API returns line names like "Orange Line", "Blue Line", etc.
+        let lineRef = buildLineRef(from: lineId)
+        
         // Filter and convert to Prediction objects
-        // Validates: Requirements 3.3, 3.4 - extract Orange Line info and filter by direction
+        // Validates: Requirements 6.1, 6.4 - filter by line ID and direction
         let predictions = visits.compactMap { visit -> Prediction? in
             let journey = visit.MonitoredVehicleJourney
             
-            // Filter for Orange Line only
-            guard journey.LineRef == Self.orangeLineRef else {
+            // Filter by line ID
+            // Validates: Requirements 6.1, 6.4 - only return predictions for the selected line
+            guard journey.LineRef == lineRef else {
                 return nil
             }
             
             // Filter by direction
-            // Validates: Requirements 3.4 - filter train data by user-selected direction
-            guard journey.DirectionRef == direction.directionId else {
+            guard journey.DirectionRef == directionId else {
                 return nil
             }
             
@@ -266,10 +394,9 @@ class VTAService: VTAServiceProtocol {
             )
             
             // Get destination name
-            let destination = journey.DestinationName ?? direction.displayName
+            let destination = journey.DestinationName ?? ""
             
             // Create prediction
-            // Validates: Requirements 3.5 - return next train arrival time
             return Prediction(
                 minutesUntilArrival: minutesUntilArrival,
                 arrivalStatus: arrivalStatus,
@@ -285,6 +412,27 @@ class VTAService: VTAServiceProtocol {
             let m2 = p2.minutesUntilArrival ?? -1
             return m1 < m2
         }
+    }
+    
+    /// Builds the line reference string for API filtering
+    /// - Parameter lineId: The line identifier (e.g., "Orange", "Blue", "Green")
+    /// - Returns: The line reference string as returned by the API (e.g., "Orange Line", "Blue Line")
+    private func buildLineRef(from lineId: String) -> String {
+        // The API returns line names with " Line" suffix for light rail lines
+        // For bus routes, it returns just the route number
+        switch lineId {
+        case "Orange", "Blue", "Green":
+            return "\(lineId) Line"
+        default:
+            return lineId
+        }
+    }
+    
+    /// Parses the SIRI API response and extracts predictions (backward compatible)
+    /// - Validates: Requirements 3.3, 3.4 - parse response and filter by direction
+    private func parseResponse(data: Data, direction: Direction) throws -> [Prediction] {
+        // Call the new method with Orange Line as default
+        return try parseResponse(data: data, lineId: "Orange", directionId: direction.directionId)
     }
     
     /// Parses arrival time from API response
@@ -362,10 +510,16 @@ class VTAService: VTAServiceProtocol {
 /// Mock implementation of VTAServiceProtocol for testing
 class MockVTAService: VTAServiceProtocol {
     
+    /// Lines to return from fetchAllLines
+    var mockLines: [Line] = []
+    
+    /// Stations to return from fetchStations
+    var mockStations: [Station] = []
+    
     /// Predictions to return from fetchPredictions
     var mockPredictions: [Prediction] = []
     
-    /// Error to throw from fetchPredictions (if set)
+    /// Error to throw from any method (if set)
     var mockError: VTAServiceError?
     
     /// Records the last station ID requested
@@ -374,8 +528,41 @@ class MockVTAService: VTAServiceProtocol {
     /// Records the last direction requested
     var lastRequestedDirection: Direction?
     
+    /// Records the last line ID requested
+    var lastRequestedLineId: String?
+    
+    /// Records the last direction ID requested
+    var lastRequestedDirectionId: String?
+    
     /// Number of times fetchPredictions was called
     var fetchCallCount: Int = 0
+    
+    /// Number of times fetchAllLines was called
+    var fetchLinesCallCount: Int = 0
+    
+    /// Number of times fetchStations was called
+    var fetchStationsCallCount: Int = 0
+    
+    func fetchAllLines() async throws -> [Line] {
+        fetchLinesCallCount += 1
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockLines
+    }
+    
+    func fetchStations(for lineId: String) async throws -> [Station] {
+        fetchStationsCallCount += 1
+        lastRequestedLineId = lineId
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockStations
+    }
     
     func fetchPredictions(
         stationId: String,
@@ -384,6 +571,25 @@ class MockVTAService: VTAServiceProtocol {
         fetchCallCount += 1
         lastRequestedStationId = stationId
         lastRequestedDirection = direction
+        lastRequestedLineId = "Orange"  // Default to Orange for backward compatibility
+        lastRequestedDirectionId = direction.directionId
+        
+        if let error = mockError {
+            throw error
+        }
+        
+        return mockPredictions
+    }
+    
+    func fetchPredictions(
+        lineId: String,
+        stationId: String,
+        directionId: String
+    ) async throws -> [Prediction] {
+        fetchCallCount += 1
+        lastRequestedLineId = lineId
+        lastRequestedStationId = stationId
+        lastRequestedDirectionId = directionId
         
         if let error = mockError {
             throw error
@@ -394,10 +600,16 @@ class MockVTAService: VTAServiceProtocol {
     
     /// Resets all mock state
     func reset() {
+        mockLines = []
+        mockStations = []
         mockPredictions = []
         mockError = nil
         lastRequestedStationId = nil
         lastRequestedDirection = nil
+        lastRequestedLineId = nil
+        lastRequestedDirectionId = nil
         fetchCallCount = 0
+        fetchLinesCallCount = 0
+        fetchStationsCallCount = 0
     }
 }

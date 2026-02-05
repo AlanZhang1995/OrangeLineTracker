@@ -91,6 +91,15 @@
             ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D43A3F102F325D61001A8B5C"
+            BuildableName = "OrangeLineTracker.app"
+            BlueprintName = "OrangeLineTracker"
+            ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

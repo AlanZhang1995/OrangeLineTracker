@@ -17,8 +17,14 @@ class MockStorageService: StorageServiceProtocol {
     var selectedDirection: Direction?
     var timeRules: [TimeRule] = []
     var isTimeRuleEnabled: Bool = false
+    var isSmartRefreshEnabled: Bool = true
     var cachedArrivalMinutes: Int?
     var lastUpdateTime: Date?
+    
+    // Line-related properties (VTA All Lines support)
+    var selectedLineId: String?
+    var favoriteLineIds: Set<String> = []
+    var cachedLines: [Line]?
     
     var saveCallCount = 0
     var loadCallCount = 0
@@ -32,10 +38,14 @@ class MockStorageService: StorageServiceProtocol {
         loadCallCount += 1
     }
     
-    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil) {
+    func updateWidgetData(stationName: String, stationShortName: String, direction: String, arrivalMinutes: Int?, arrivalMinutes2: Int? = nil, arrivalMinutes3: Int? = nil, lineId: String? = nil, lineName: String? = nil, lineColor: String? = nil) {
         updateWidgetDataCallCount += 1
         cachedArrivalMinutes = arrivalMinutes
         lastUpdateTime = Date()
+    }
+    
+    func migrateFromV1IfNeeded() {
+        // Mock implementation - no-op for tests
     }
 }
 
@@ -335,7 +345,8 @@ struct TimeRuleServiceTests {
         var rule = createRule(name: "Test", hour: 8, minute: 0, direction: .alumRock)
         let (service, mockStorage) = createService(rules: [rule], isTimeRuleEnabled: true)
         
-        rule.direction = .mountainView
+        // Use directionId to change direction (direction is now a computed property)
+        rule.directionId = Direction.mountainView.directionId
         service.updateRule(rule)
         
         #expect(mockStorage.timeRules.first?.direction == .mountainView)
@@ -1319,7 +1330,8 @@ struct TimeRuleServiceIntegrationTests {
         // Update the rule
         var updatedRule = service.allRules.first!
         updatedRule.name = "Updated Morning"
-        updatedRule.direction = .mountainView
+        // Use directionId to change direction (direction is now a computed property)
+        updatedRule.directionId = Direction.mountainView.directionId
         service.updateRule(updatedRule)
         #expect(service.allRules.first?.name == "Updated Morning")
         #expect(service.allRules.first?.direction == .mountainView)

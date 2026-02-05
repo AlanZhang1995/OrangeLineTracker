@@ -13,19 +13,27 @@ import WidgetKit
 
 /// Main ViewModel for the OrangeLineTracker app
 /// Coordinates between VTAService, StorageService, and TimeRuleService
-/// - Validates: Requirements 1.2, 2.2, 3.1, 4.6, 5.1, 5.2, 5.3, 5.4, 5.5, 7.4
+/// - Validates: Requirements 1.2, 2.2, 3.1, 4.3, 4.5, 5.1, 5.2, 5.3, 5.4, 5.5, 7.4
 @MainActor
 class MetroViewModel: ObservableObject {
     
     // MARK: - Published Properties
     
+    /// The currently selected line
+    /// - Validates: Requirements 4.3, 7.1
+    @Published var selectedLine: Line?
+    
     /// The currently selected station
     /// - Validates: Requirements 1.2, 7.4
     @Published var selectedStation: Station?
     
-    /// The currently selected direction
+    /// The currently selected direction (backward compatible)
     /// - Validates: Requirements 2.2, 7.4
     @Published var selectedDirection: Direction = .alumRock
+    
+    /// The currently selected direction ID (for multi-line support)
+    /// - Validates: Requirements 5.2, 5.3, 5.4
+    @Published var selectedDirectionId: String = "E"
     
     /// The list of arrival predictions for the selected station and direction
     /// - Validates: Requirements 3.1, 4.6
@@ -41,6 +49,10 @@ class MetroViewModel: ObservableObject {
     
     /// Timestamp of the last successful data update
     @Published var lastUpdated: Date?
+    
+    /// All available lines for selection
+    /// - Validates: Requirements 4.3
+    @Published var allLines: [Line] = []
     
     // MARK: - Private Properties
     
@@ -108,10 +120,82 @@ class MetroViewModel: ObservableObject {
     
     // MARK: - Public Methods
     
+    /// Selects a line and clears station selection if switching to a different line
+    /// - Parameter line: The line to select
+    /// - Validates: Requirements 4.3, 4.5, 7.1
+    func selectLine(_ line: Line) {
+        // Check if we're switching to a different line
+        let isNewLine = selectedLine?.id != line.id
+        
+        selectedLine = line
+        
+        // Clear station selection when switching lines
+        // Validates: Requirements 4.5 - clear station selection when switching lines
+        if isNewLine {
+            selectedStation = nil
+            predictions = []
+            cachedPredictions = []
+            errorMessage = nil
+            
+            // Set default direction to the first direction of the new line
+            if let firstDirection = line.directions.first {
+                selectedDirectionId = firstDirection.id
+                // Update backward-compatible direction if applicable
+                updateBackwardCompatibleDirection(from: firstDirection.id)
+            }
+        }
+        
+        // Save the line selection
+        storageService.selectedLineId = line.id
+        storageService.save()
+        
+        // Notify widget of line change
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+    
+    /// Loads all available lines from the API
+    /// - Validates: Requirements 4.3
+    func loadAllLines() async {
+        do {
+            let lines = try await vtaService.fetchAllLines()
+            allLines = lines
+            
+            // Cache lines for offline access
+            storageService.cachedLines = lines
+            storageService.save()
+            
+            // Restore selected line if it exists
+            if let selectedLineId = storageService.selectedLineId,
+               let line = lines.first(where: { $0.id == selectedLineId }) {
+                selectedLine = line
+            }
+            
+            print("MetroViewModel: ✅ Loaded \(lines.count) lines")
+        } catch {
+            print("MetroViewModel: ❌ Failed to load lines: \(error)")
+            
+            // Try to use cached data
+            if let cachedLines = storageService.cachedLines {
+                allLines = cachedLines
+                print("MetroViewModel: 📦 Using cached lines (\(cachedLines.count) lines)")
+            }
+        }
+    }
+    
     /// Selects a station and saves the preference
+    /// Validates that the station belongs to the current line
     /// - Parameter station: The station to select
-    /// - Validates: Requirements 1.2, 1.4, 7.1
+    /// - Validates: Requirements 1.2, 1.4, 4.3, 7.1
     func selectStation(_ station: Station) {
+        // Validate station belongs to current line (if a line is selected)
+        // Validates: Requirements 4.3 - validate station belongs to current line
+        if let currentLine = selectedLine {
+            guard station.lineId == currentLine.id else {
+                print("MetroViewModel: ⚠️ Station \(station.name) does not belong to line \(currentLine.name)")
+                return
+            }
+        }
+        
         selectedStation = station
         savePreferences()
         
@@ -132,11 +216,12 @@ class MetroViewModel: ObservableObject {
         }
     }
     
-    /// Selects a direction and saves the preference
+    /// Selects a direction and saves the preference (backward compatible)
     /// - Parameter direction: The direction to select
     /// - Validates: Requirements 2.2, 2.3, 7.2
     func selectDirection(_ direction: Direction) {
         selectedDirection = direction
+        selectedDirectionId = direction.directionId
         savePreferences()
         
         // Clear error and cached data when user makes a new selection
@@ -156,6 +241,46 @@ class MetroViewModel: ObservableObject {
         }
     }
     
+    /// Selects a direction by ID (for multi-line support)
+    /// - Parameter directionId: The direction ID to select (e.g., "E", "W", "N", "S")
+    /// - Validates: Requirements 5.2, 5.3, 5.4
+    func selectDirection(byId directionId: String) {
+        selectedDirectionId = directionId
+        updateBackwardCompatibleDirection(from: directionId)
+        savePreferences()
+        
+        // Clear error and cached data when user makes a new selection
+        errorMessage = nil
+        cachedPredictions = []
+        predictions = []
+        
+        // Notify widget of direction change immediately
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        // Reset background refresh schedule for new direction
+        BackgroundRefreshManager.shared.resetAndReschedule()
+        
+        // Refresh predictions for the new direction
+        Task {
+            await refreshPredictions()
+        }
+    }
+    
+    /// Updates the backward-compatible Direction enum from a direction ID
+    /// - Parameter directionId: The direction ID (e.g., "E", "W", "N", "S")
+    private func updateBackwardCompatibleDirection(from directionId: String) {
+        switch directionId {
+        case "E":
+            selectedDirection = .alumRock
+        case "W":
+            selectedDirection = .mountainView
+        default:
+            // For non-Orange Line directions, default to alumRock
+            // This maintains backward compatibility
+            selectedDirection = .alumRock
+        }
+    }
+    
     /// Refreshes predictions from the VTA API
     /// Implements error recovery by caching successful data
     /// - Validates: Requirements 3.1, 4.6, 5.1, 5.2, 5.3, 5.4, 5.5
@@ -170,18 +295,37 @@ class MetroViewModel: ObservableObject {
         // Set loading state
         isLoading = true
         
-        // Get the correct station ID for the selected direction
-        let stationId = station.stationId(for: selectedDirection)
+        // Determine the line ID to use
+        let lineId = selectedLine?.id ?? "Orange"
         
-        let directionText = selectedDirection == .alumRock ? "→东(Alum Rock)" : "←西(Mountain View)"
-        print("MetroViewModel: 🔄 Refreshing predictions for \(station.name) \(directionText)")
+        // Get the correct station ID for the selected direction
+        // Use the new platformId method for multi-line support, fall back to backward-compatible method
+        let stationId: String
+        if let platformId = station.platformId(for: selectedDirectionId) {
+            stationId = platformId
+        } else {
+            // Backward compatibility: use the old method for Orange Line
+            stationId = station.stationId(for: selectedDirection)
+        }
+        
+        // Get direction display text
+        let directionText: String
+        if let line = selectedLine,
+           let direction = line.directions.first(where: { $0.id == selectedDirectionId }) {
+            directionText = "→\(direction.headsign)"
+        } else {
+            directionText = selectedDirection == .alumRock ? "→东(Alum Rock)" : "←西(Mountain View)"
+        }
+        
+        print("MetroViewModel: 🔄 Refreshing predictions for \(station.name) \(directionText) on \(lineId)")
         
         do {
-            // Fetch predictions from VTA API
+            // Fetch predictions from VTA API using the new multi-line method
             // Validates: Requirements 3.1 - fetch real-time arrival prediction data
             let newPredictions = try await vtaService.fetchPredictions(
+                lineId: lineId,
                 stationId: stationId,
-                direction: selectedDirection
+                directionId: selectedDirectionId
             )
             
             // Update predictions and cache
@@ -202,14 +346,17 @@ class MetroViewModel: ObservableObject {
             } else {
                 print("MetroViewModel: ⚠️ No predictions available for \(station.shortName) \(directionText)")
             }
-            let directionCode = selectedDirection == .alumRock ? "E" : "W"
+            
             storageService.updateWidgetData(
                 stationName: station.name,
                 stationShortName: station.shortName,
-                direction: directionCode,
+                direction: selectedDirectionId,
                 arrivalMinutes: arrivalMinutes,
                 arrivalMinutes2: arrivalMinutes2,
-                arrivalMinutes3: arrivalMinutes3
+                arrivalMinutes3: arrivalMinutes3,
+                lineId: selectedLine?.id,
+                lineName: selectedLine?.name,
+                lineColor: selectedLine?.colorHex
             )
             WidgetCenter.shared.reloadAllTimelines()
             
@@ -251,7 +398,16 @@ class MetroViewModel: ObservableObject {
         }
         
         // Get the station for the rule
-        guard let station = OrangeLineStations.station(byId: activeRule.stationId) else {
+        // First try to find in the current line's stations, then fall back to Orange Line
+        var station: Station?
+        if let currentLine = selectedLine {
+            station = currentLine.stations.first { $0.id == activeRule.stationId || $0.platformIds.values.contains(activeRule.stationId) }
+        }
+        if station == nil {
+            station = OrangeLineStations.station(byId: activeRule.stationId)
+        }
+        
+        guard let station = station else {
             print("MetroViewModel: Could not find station for rule")
             return
         }
@@ -268,20 +424,23 @@ class MetroViewModel: ObservableObject {
             
             selectedStation = station
             selectedDirection = activeRule.direction
+            selectedDirectionId = activeRule.direction.directionId
             
             // Clear old predictions and widget data before fetching new data
             predictions = []
             cachedPredictions = []
             
             // Clear widget data to prevent showing stale data from old station
-            let directionCode = activeRule.direction == .alumRock ? "E" : "W"
             storageService.updateWidgetData(
                 stationName: station.name,
                 stationShortName: station.shortName,
-                direction: directionCode,
+                direction: selectedDirectionId,
                 arrivalMinutes: nil,
                 arrivalMinutes2: nil,
-                arrivalMinutes3: nil
+                arrivalMinutes3: nil,
+                lineId: selectedLine?.id,
+                lineName: selectedLine?.name,
+                lineColor: selectedLine?.colorHex
             )
             
             // Save the new preferences
@@ -346,6 +505,32 @@ class MetroViewModel: ObservableObject {
         // Load preferences from storage
         storageService.load()
         
+        // Load saved line
+        if let savedLineId = storageService.selectedLineId {
+            // Try to find the line from cached lines or default lines
+            if let cachedLines = storageService.cachedLines,
+               let line = cachedLines.first(where: { $0.id == savedLineId }) {
+                selectedLine = line
+            } else {
+                // Create a default Orange Line if no cached lines
+                // This will be replaced when lines are loaded from the API
+                if savedLineId == "Orange" {
+                    selectedLine = Line(
+                        id: "Orange",
+                        name: "Orange Line",
+                        shortName: "OL",
+                        type: .lightRail,
+                        colorHex: "#F7931E",
+                        directions: [
+                            LineDirection(id: "E", headsign: "Alum Rock"),
+                            LineDirection(id: "W", headsign: "Mountain View")
+                        ],
+                        stations: OrangeLineStations.stations
+                    )
+                }
+            }
+        }
+        
         // Load saved station
         if let savedStation = storageService.selectedStation {
             selectedStation = savedStation
@@ -354,6 +539,7 @@ class MetroViewModel: ObservableObject {
         // Load saved direction
         if let savedDirection = storageService.selectedDirection {
             selectedDirection = savedDirection
+            selectedDirectionId = savedDirection.directionId
         }
     }
     
@@ -425,6 +611,48 @@ class MetroViewModel: ObservableObject {
     /// Returns the short name for the current station (for complications)
     var stationShortName: String {
         selectedStation?.shortName ?? "--"
+    }
+    
+    /// Returns the display name for the current line
+    var lineDisplayName: String {
+        selectedLine?.name ?? "选择线路"
+    }
+    
+    /// Returns the short name for the current line (for complications)
+    var lineShortName: String {
+        selectedLine?.shortName ?? "--"
+    }
+    
+    /// Returns the color hex for the current line
+    var lineColorHex: String {
+        selectedLine?.colorHex ?? "#F7931E"  // Default to Orange Line color
+    }
+    
+    /// Returns the directions for the current line
+    var lineDirections: [LineDirection] {
+        selectedLine?.directions ?? [
+            LineDirection(id: "E", headsign: "Alum Rock"),
+            LineDirection(id: "W", headsign: "Mountain View")
+        ]
+    }
+    
+    /// Returns the current direction's headsign (terminal station name)
+    /// - Validates: Requirements 5.2 - use terminal station name as direction identifier
+    var currentDirectionHeadsign: String {
+        if let line = selectedLine,
+           let direction = line.directions.first(where: { $0.id == selectedDirectionId }) {
+            return direction.headsign
+        }
+        return selectedDirection.displayName
+    }
+    
+    /// Returns the stations for the current line, sorted by order
+    /// - Validates: Requirements 4.2 - stations in geographic order
+    var lineStations: [Station] {
+        if let line = selectedLine {
+            return line.stations.sorted { $0.order < $1.order }
+        }
+        return OrangeLineStations.stations
     }
 }
 

@@ -359,13 +359,13 @@ struct DirectionFilteringTests {
     @Test func directionIdMapsCorrectlyForMountainView() {
         // Validates: Requirements 3.4 - filter by direction
         let direction = Direction.mountainView
-        #expect(direction.directionId == "IB")
+        #expect(direction.directionId == "W")  // Westbound
     }
     
     @Test func directionIdMapsCorrectlyForAlumRock() {
         // Validates: Requirements 3.4 - filter by direction
         let direction = Direction.alumRock
-        #expect(direction.directionId == "OB")
+        #expect(direction.directionId == "E")  // Eastbound
     }
 }
 
@@ -703,5 +703,199 @@ struct ISO8601DateParsingTests {
         
         let date = formatter.date(from: dateString)
         #expect(date != nil)
+    }
+}
+
+// MARK: - All Lines All Directions API Tests
+
+/// Tests that verify all VTA lines and all directions can fetch data from the API
+/// This is a live API test that validates the multi-line support implementation
+struct AllLinesAllDirectionsAPITests {
+    
+    /// Test that all lines can be fetched from the API
+    @Test func fetchAllLinesReturnsData() async throws {
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
+        
+        let lines = try await vtaService.fetchAllLines()
+        
+        // Should have at least the 3 main light rail lines
+        #expect(lines.count >= 3, "Expected at least 3 lines (Orange, Blue, Green)")
+        
+        // Verify Orange Line exists
+        let orangeLine = lines.first { $0.id == "Orange" }
+        #expect(orangeLine != nil, "Orange Line should exist")
+        #expect(orangeLine?.directions.count == 2, "Orange Line should have 2 directions")
+        
+        // Verify Blue Line exists
+        let blueLine = lines.first { $0.id == "Blue" }
+        #expect(blueLine != nil, "Blue Line should exist")
+        #expect(blueLine?.directions.count == 2, "Blue Line should have 2 directions")
+        
+        // Verify Green Line exists
+        let greenLine = lines.first { $0.id == "Green" }
+        #expect(greenLine != nil, "Green Line should exist")
+        #expect(greenLine?.directions.count == 2, "Green Line should have 2 directions")
+        
+        print("✅ Fetched \(lines.count) lines from API")
+        for line in lines {
+            print("  - \(line.name): \(line.directions.count) directions, \(line.stations.count) stations")
+        }
+    }
+    
+    /// Test that predictions can be fetched for all lines and all directions
+    /// This validates that the API returns data for every line/direction combination
+    @Test func fetchPredictionsForAllLinesAllDirections() async throws {
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
+        
+        // Fetch all lines first
+        let lines = try await vtaService.fetchAllLines()
+        #expect(!lines.isEmpty, "Should have at least one line")
+        
+        var successCount = 0
+        var noDataCount = 0
+        var errorCount = 0
+        var results: [(line: String, direction: String, station: String, status: String)] = []
+        
+        // Test each line
+        for line in lines {
+            // Skip bus lines for now, focus on light rail
+            guard line.type == .lightRail else { continue }
+            
+            // Test each direction
+            for direction in line.directions {
+                // Pick a station from the middle of the line for testing
+                let stationIndex = line.stations.count / 2
+                guard stationIndex < line.stations.count else { continue }
+                let station = line.stations[stationIndex]
+                
+                do {
+                    let predictions = try await vtaService.fetchPredictions(
+                        lineId: line.id,
+                        stationId: station.id,
+                        directionId: direction.id
+                    )
+                    
+                    if predictions.isEmpty {
+                        noDataCount += 1
+                        results.append((line.name, direction.headsign, station.name, "No data (may be off-hours)"))
+                    } else {
+                        successCount += 1
+                        let firstPrediction = predictions.first!
+                        results.append((line.name, direction.headsign, station.name, "✅ \(predictions.count) predictions, next: \(firstPrediction.minutesUntilArrival ?? -1) min"))
+                    }
+                } catch VTAServiceError.noDataAvailable {
+                    noDataCount += 1
+                    results.append((line.name, direction.headsign, station.name, "No data available"))
+                } catch {
+                    errorCount += 1
+                    results.append((line.name, direction.headsign, station.name, "❌ Error: \(error.localizedDescription)"))
+                }
+                
+                // Small delay to avoid rate limiting
+                try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            }
+        }
+        
+        // Print results
+        print("\n📊 All Lines All Directions API Test Results:")
+        print("=" .padding(toLength: 80, withPad: "=", startingAt: 0))
+        for result in results {
+            print("[\(result.line)] \(result.direction) @ \(result.station): \(result.status)")
+        }
+        print("=" .padding(toLength: 80, withPad: "=", startingAt: 0))
+        print("Summary: ✅ \(successCount) success, ⚠️ \(noDataCount) no data, ❌ \(errorCount) errors")
+        
+        // The test passes if we got at least some successful responses
+        // No data is acceptable during off-hours
+        #expect(errorCount == 0, "Should have no API errors")
+        #expect(successCount + noDataCount > 0, "Should have tested at least one line/direction")
+    }
+    
+    /// Test Orange Line specifically - both directions
+    @Test func fetchOrangeLineBothDirections() async throws {
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
+        
+        // Use a known Orange Line station
+        let station = OrangeLineStations.stations[5] // Convention Center
+        
+        // Test Eastbound (Alum Rock)
+        do {
+            let eastboundPredictions = try await vtaService.fetchPredictions(
+                stationId: station.id,
+                direction: .alumRock
+            )
+            print("Orange Line Eastbound @ \(station.name): \(eastboundPredictions.count) predictions")
+            // No assertion on count - may be empty during off-hours
+        } catch VTAServiceError.noDataAvailable {
+            print("Orange Line Eastbound @ \(station.name): No data (off-hours)")
+        }
+        
+        // Test Westbound (Mountain View)
+        do {
+            let westboundPredictions = try await vtaService.fetchPredictions(
+                stationId: station.id,
+                direction: .mountainView
+            )
+            print("Orange Line Westbound @ \(station.name): \(westboundPredictions.count) predictions")
+            // No assertion on count - may be empty during off-hours
+        } catch VTAServiceError.noDataAvailable {
+            print("Orange Line Westbound @ \(station.name): No data (off-hours)")
+        }
+        
+        // Test passes if no errors thrown (noDataAvailable is acceptable)
+    }
+    
+    /// Test Blue Line specifically - both directions
+    @Test func fetchBlueLineBothDirections() async throws {
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
+        let lines = try await vtaService.fetchAllLines()
+        
+        guard let blueLine = lines.first(where: { $0.id == "Blue" }),
+              !blueLine.stations.isEmpty else {
+            print("Blue Line not found or has no stations")
+            return
+        }
+        
+        let station = blueLine.stations[blueLine.stations.count / 2]
+        
+        for direction in blueLine.directions {
+            do {
+                let predictions = try await vtaService.fetchPredictions(
+                    lineId: blueLine.id,
+                    stationId: station.id,
+                    directionId: direction.id
+                )
+                print("Blue Line \(direction.headsign) @ \(station.name): \(predictions.count) predictions")
+            } catch VTAServiceError.noDataAvailable {
+                print("Blue Line \(direction.headsign) @ \(station.name): No data (off-hours)")
+            }
+        }
+    }
+    
+    /// Test Green Line specifically - both directions
+    @Test func fetchGreenLineBothDirections() async throws {
+        let vtaService = VTAService(apiKey: APIConfig.vtaAPIKey)
+        let lines = try await vtaService.fetchAllLines()
+        
+        guard let greenLine = lines.first(where: { $0.id == "Green" }),
+              !greenLine.stations.isEmpty else {
+            print("Green Line not found or has no stations")
+            return
+        }
+        
+        let station = greenLine.stations[greenLine.stations.count / 2]
+        
+        for direction in greenLine.directions {
+            do {
+                let predictions = try await vtaService.fetchPredictions(
+                    lineId: greenLine.id,
+                    stationId: station.id,
+                    directionId: direction.id
+                )
+                print("Green Line \(direction.headsign) @ \(station.name): \(predictions.count) predictions")
+            } catch VTAServiceError.noDataAvailable {
+                print("Green Line \(direction.headsign) @ \(station.name): No data (off-hours)")
+            }
+        }
     }
 }

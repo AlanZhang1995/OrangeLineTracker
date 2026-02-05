@@ -138,6 +138,7 @@ struct OrangeLineTrackerApp: App {
 
 /// Main content view that wraps ContentView with proper ViewModel injection
 /// This separates the view hierarchy from the App struct for cleaner architecture
+/// Tab order: Arrival → Selection (Line + Station) → Settings
 struct MainContentView: View {
     
     /// Main ViewModel for metro data
@@ -146,15 +147,20 @@ struct MainContentView: View {
     /// ViewModel for time rule management
     @ObservedObject var timeRuleViewModel: TimeRuleViewModel
     
+    /// The currently selected tab
+    @State private var selectedTab: Int = 0
+    
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             // Tab 1: Arrival Times Display
             // - Validates: Requirements 4.1-4.6, 5.1-5.5, 6.1, 6.4, 6.5
             ArrivalView(viewModel: metroViewModel)
+                .tag(0)
             
-            // Tab 2: Station Selection
-            // - Validates: Requirements 1.1-1.5, 6.2
+            // Tab 2: Line and Station Selection (combined)
+            // - Validates: Requirements 1.1-1.5, 6.2, 10.1, 10.3
             StationPickerView(viewModel: metroViewModel)
+                .tag(1)
             
             // Tab 3: Settings
             // - Validates: Requirements 2.1-2.4, 6.3, 8.1-8.7
@@ -162,8 +168,20 @@ struct MainContentView: View {
                 metroViewModel: metroViewModel,
                 timeRuleViewModel: timeRuleViewModel
             )
+            .tag(2)
         }
         .tabViewStyle(.verticalPage) // Supports Digital Crown navigation
+        .onAppear {
+            // Load lines when app appears
+            Task {
+                await metroViewModel.loadAllLines()
+            }
+            
+            // If no line is selected, guide user to selection page
+            if metroViewModel.selectedLine == nil {
+                selectedTab = 1
+            }
+        }
     }
 }
 

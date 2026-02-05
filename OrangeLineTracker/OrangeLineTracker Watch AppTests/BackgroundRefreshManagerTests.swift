@@ -22,6 +22,12 @@ final class BackgroundRefreshManagerTests: XCTestCase {
     @MainActor
     override func setUp() {
         super.setUp()
+        
+        // Clear UserDefaults to ensure clean state for tests
+        UserDefaults.standard.removeObject(forKey: "lastBackgroundRefreshDate")
+        UserDefaults.standard.removeObject(forKey: "lastKnownArrivalMinutes")
+        UserDefaults.standard.synchronize()
+        
         mockVTAService = MockVTAService()
         mockStorageService = MockStorageService()
         mockTimeRuleService = MockTimeRuleService(storageService: mockStorageService)
@@ -41,6 +47,12 @@ final class BackgroundRefreshManagerTests: XCTestCase {
         mockTimeRuleService = nil
         backgroundRefreshManager = nil
         complicationController = nil
+        
+        // Clean up UserDefaults after tests
+        UserDefaults.standard.removeObject(forKey: "lastBackgroundRefreshDate")
+        UserDefaults.standard.removeObject(forKey: "lastKnownArrivalMinutes")
+        UserDefaults.standard.synchronize()
+        
         super.tearDown()
     }
     

@@ -1,4 +1,57 @@
-# Orange Line Tracker 开发日志
+# VTA Transit Tracker 开发日志
+
+## 2026-02-05 工作总结
+
+### 完成的功能
+
+#### 1. VTA 全线路支持
+扩展应用从仅支持 Orange Line 到支持全部三条 VTA 轻轨线路：
+- 🟠 Orange Line (Mountain View ↔ Alum Rock)
+- 🔵 Blue Line (Baypointe ↔ Santa Teresa)  
+- 🟢 Green Line (Old Ironsides ↔ Winchester)
+
+**实现**:
+- `Line` 模型支持多线路数据结构
+- `VTAService.fetchAllLines()` 从 API 获取所有线路
+- 动态方向支持（E/W 用于 Orange，N/S 用于 Blue/Green）
+- 每条线路独立的站点列表和颜色
+
+#### 2. UI 简化 - 合并线路和站点选择
+- 移除独立的线路选择页面
+- 将线路和站点选择合并到一个页面，使用下拉菜单
+- 3 个 Tab：到站时间 → 选择（线路+站点）→ 设置
+
+#### 3. 动态主题色
+- 所有 UI 元素颜色随所选线路变化
+- 设置页面颜色也跟随线路颜色
+- Widget 颜色随线路变化
+
+#### 4. 时间规则显示优化
+- 改为两行布局，更紧凑
+- 第一行：规则名称 + 触发时间
+- 第二行：线路颜色点 + 站点 + 方向
+
+#### 5. API 测试
+新增 5 个 API 测试验证所有线路和方向的数据获取：
+- `fetchAllLinesReturnsData()` - 验证三条线路存在
+- `fetchPredictionsForAllLinesAllDirections()` - 测试所有线路/方向组合
+- `fetchOrangeLineBothDirections()` - Orange Line 双向测试
+- `fetchBlueLineBothDirections()` - Blue Line 双向测试
+- `fetchGreenLineBothDirections()` - Green Line 双向测试
+
+#### 6. 项目清理
+- 移除未使用的 iOS App target 和相关文件
+- 保留 Watch App、Widget、Tests
+
+**文件变更**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/ContentView.swift` - UI 重构
+- `OrangeLineTracker/OrangeLineTracker Watch App/ViewModels/MetroViewModel.swift` - 多线路支持
+- `OrangeLineTracker/OrangeLineTracker Watch App/Services/VTAService.swift` - 多线路 API
+- `OrangeLineTracker/OrangeLineTracker Watch App/Models/Line.swift` - 线路模型
+- `OrangeLineTracker/OrangeLineTracker Watch AppTests/VTAServiceTests.swift` - API 测试
+- `OrangeLineTracker/OrangeLineWidget/OrangeLineWidget.swift` - Widget 多线路支持
+
+---
 
 ## 2026-02-04 工作总结
 

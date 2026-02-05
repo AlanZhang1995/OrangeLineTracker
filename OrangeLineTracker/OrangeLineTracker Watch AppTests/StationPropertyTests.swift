@@ -575,16 +575,16 @@ struct OrangeLineStationsBackwardCompatibilityTests {
     /// Property 11: OrangeLineStations maintains correct count
     /// **Validates: Requirements 1.5**
     /// **Feature: vta-all-lines, Property 11: 向后兼容性 - 旧数据迁移**
-    @Test("Property 11: OrangeLineStations has 28 stations")
-    func orangeLineStationsHas28Stations() {
+    @Test("Property 11: OrangeLineStations has 26 stations")
+    func orangeLineStationsHas26Stations() {
         #expect(
-            OrangeLineStations.count == 28,
-            "OrangeLineStations should have 28 stations, got \(OrangeLineStations.count)"
+            OrangeLineStations.count == 26,
+            "OrangeLineStations should have 26 stations, got \(OrangeLineStations.count)"
         )
         
         #expect(
-            OrangeLineStations.stations.count == 28,
-            "OrangeLineStations.stations should have 28 stations"
+            OrangeLineStations.stations.count == 26,
+            "OrangeLineStations.stations should have 26 stations"
         )
     }
     
@@ -607,8 +607,8 @@ struct OrangeLineStationsBackwardCompatibilityTests {
             "Last station should be Alum Rock"
         )
         #expect(
-            OrangeLineStations.last.order == 27,
-            "Last station order should be 27"
+            OrangeLineStations.last.order == 25,
+            "Last station order should be 25"
         )
     }
 }

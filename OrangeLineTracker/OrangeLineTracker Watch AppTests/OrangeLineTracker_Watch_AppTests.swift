@@ -70,10 +70,10 @@ struct StationModelTests {
 
 struct OrangeLineStationsTests {
     
-    @Test func orangeLineHas28Stations() {
+    @Test func orangeLineHas26Stations() {
         // Validates: Requirements 1.1 - display all Orange Line stations
-        #expect(OrangeLineStations.stations.count == 28)
-        #expect(OrangeLineStations.count == 28)
+        #expect(OrangeLineStations.stations.count == 26)
+        #expect(OrangeLineStations.count == 26)
     }
     
     @Test func stationsAreOrderedGeographically() {
@@ -86,7 +86,7 @@ struct OrangeLineStationsTests {
         
         // Last station should be Alum Rock
         #expect(stations.last?.name == "Alum Rock")
-        #expect(stations.last?.order == 27)
+        #expect(stations.last?.order == 25)
     }
     
     @Test func stationsHaveConsecutiveOrderValues() {
@@ -153,7 +153,7 @@ struct OrangeLineStationsTests {
         #expect(station != nil)
         #expect(station?.name == "Mountain View")
         
-        let lastStation = OrangeLineStations.station(byOrder: 27)
+        let lastStation = OrangeLineStations.station(byOrder: 25)
         #expect(lastStation?.name == "Alum Rock")
     }
     
@@ -187,7 +187,7 @@ struct OrangeLineStationsTests {
         #expect(gam.shortName == "GAM")
         
         // Alum Rock (last)
-        let alr = stations[27]
+        let alr = stations[25]
         #expect(alr.eastboundId == "65242")
         #expect(alr.westboundId == "65243")
         #expect(alr.name == "Alum Rock")
@@ -1274,14 +1274,14 @@ struct StationSortingPropertyTests {
                 "Iteration \(iteration): First station should have order 0"
             )
             
-            // Last station should always be Alum Rock with order 27 (28 stations, indexed 0-27)
+            // Last station should always be Alum Rock with order 25 (26 stations, indexed 0-25)
             #expect(
                 sortedStations.last?.name == "Alum Rock",
                 "Iteration \(iteration): Last station should be Alum Rock"
             )
             #expect(
-                sortedStations.last?.order == 27,
-                "Iteration \(iteration): Last station should have order 27"
+                sortedStations.last?.order == 25,
+                "Iteration \(iteration): Last station should have order 25"
             )
         }
     }

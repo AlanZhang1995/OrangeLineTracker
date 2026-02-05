@@ -355,7 +355,7 @@ struct TimeRuleAutomaticSwitchingIntegrationTests {
         mockStorageService.selectedDirection = .alumRock
         
         // Set up an active time rule
-        let targetStation = OrangeLineStations.stations[27] // Alum Rock
+        let targetStation = OrangeLineStations.stations[25] // Alum Rock
         mockTimeRuleService.mockActiveRule = TimeRule(
             name: "Evening Commute",
             triggerTime: TimeRule.createTriggerTime(hour: 17, minute: 30),
@@ -1043,7 +1043,7 @@ struct StationDirectionDisplayIntegrationTests {
         
         // Verify last station is Alum Rock
         #expect(stations.last?.name == "Alum Rock")
-        #expect(stations.last?.order == 27)  // 28 stations, indexed 0-27
+        #expect(stations.last?.order == 25)  // 26 stations, indexed 0-25
         
         // Verify all stations are in order
         for i in 0..<stations.count - 1 {
@@ -1308,7 +1308,7 @@ struct CompleteSystemIntegrationTests {
         let stationsToTest = [
             OrangeLineStations.stations[0],  // Mountain View
             OrangeLineStations.stations[12], // Great America
-            OrangeLineStations.stations[27]  // Alum Rock
+            OrangeLineStations.stations[25]  // Alum Rock
         ]
         
         for station in stationsToTest {

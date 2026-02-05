@@ -241,6 +241,7 @@ struct ArrivalView: View {
     // MARK: - Minute Timer Scheduling
     
     /// Schedules a timer to fire at the next minute mark (:00 seconds)
+    /// Timer is added to .common RunLoop mode to ensure it fires even during scrolling
     private func scheduleMinuteTimer() {
         // Invalidate existing timer
         minuteTimer?.invalidate()
@@ -252,15 +253,21 @@ struct ArrivalView: View {
         let secondsUntilNextMinute = 60 - seconds
         
         // Schedule timer to fire at next minute mark
-        minuteTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(secondsUntilNextMinute), repeats: false) { _ in
+        let initialTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(secondsUntilNextMinute), repeats: false) { _ in
             // Update current time and refresh
             self.onMinuteMark()
             
             // Schedule repeating timer for subsequent minutes
-            self.minuteTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+            let repeatingTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
                 self.onMinuteMark()
             }
+            // Add repeating timer to .common mode to ensure it fires during scrolling
+            RunLoop.main.add(repeatingTimer, forMode: .common)
+            self.minuteTimer = repeatingTimer
         }
+        // Add initial timer to .common mode to ensure it fires during scrolling
+        RunLoop.main.add(initialTimer, forMode: .common)
+        minuteTimer = initialTimer
     }
     
     /// Called at each minute mark (:00 seconds)

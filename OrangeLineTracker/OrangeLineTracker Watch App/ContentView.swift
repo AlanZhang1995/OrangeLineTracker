@@ -752,9 +752,6 @@ struct SettingsView: View {
     @ObservedObject var timeRuleViewModel: TimeRuleViewModel
     @ObservedObject private var languageService = LanguageService.shared
     
-    /// State for navigating to API key settings
-    @State private var showingAPIKeySettings = false
-    
     /// The color for the current line (parsed from hex)
     /// Falls back to orange if no line selected or parsing fails
     private var lineColor: Color {
@@ -778,9 +775,6 @@ struct SettingsView: View {
                 apiKeySection
             }
             .navigationTitle(L10n.settings)
-            .navigationDestination(isPresented: $showingAPIKeySettings) {
-                APIKeySettingsView()
-            }
         }
     }
     
@@ -969,8 +963,8 @@ struct SettingsView: View {
     /// Section for API key configuration
     private var apiKeySection: some View {
         Section {
-            Button {
-                showingAPIKeySettings = true
+            NavigationLink {
+                APIKeySettingsView()
             } label: {
                 HStack {
                     Image(systemName: "key.fill")
@@ -984,13 +978,8 @@ struct SettingsView: View {
                     Image(systemName: APIConfig.hasUserAPIKey ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
                         .font(.caption)
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
             }
-            .buttonStyle(PlainButtonStyle())
         } header: {
             Label(L10n.apiKeySettings, systemImage: "key")
                 .foregroundColor(lineColor)

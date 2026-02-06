@@ -1,5 +1,43 @@
 # VTA Transit Tracker 开发日志
 
+## 2026-02-05 工作总结 (续)
+
+### 完成的功能
+
+#### 1. 多语言支持 (i18n)
+实现了完整的中英双语支持：
+
+**架构**:
+- `LanguageService` 单例管理语言状态
+- `L10n` 枚举提供所有本地化字符串
+- 语言偏好存储在 UserDefaults，同时同步到 App Group 供 Widget 使用
+
+**覆盖范围**:
+- 所有 UI 文本（标签、按钮、提示）
+- 错误消息（网络错误、API 错误、解析错误等）
+- Widget 文本
+- 时间规则配置摘要
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/Services/LanguageService.swift` - 新增
+- `OrangeLineTracker/OrangeLineTracker Watch App/ContentView.swift` - 更新所有视图使用 L10n
+- `OrangeLineTracker/OrangeLineTracker Watch App/Views/LineSelectorView.swift` - 更新
+- `OrangeLineTracker/OrangeLineTracker Watch App/Views/DirectionPickerView.swift` - 更新
+- `OrangeLineTracker/OrangeLineTracker Watch App/ViewModels/MetroViewModel.swift` - lastUpdatedDisplay 使用 L10n
+- `OrangeLineTracker/OrangeLineTracker Watch App/ViewModels/TimeRuleViewModel.swift` - configurationSummary 使用 L10n
+- `OrangeLineTracker/OrangeLineTracker Watch App/Services/VTAService.swift` - 错误消息使用 L10n
+- `OrangeLineTracker/OrangeLineWidget/OrangeLineWidget.swift` - Widget 支持语言切换
+
+#### 2. UX 优化
+- 到站时间显示减去 1 分钟（考虑步行到站台时间）
+- 智能刷新默认关闭（使用随机间隔更省电）
+
+#### 3. 修复
+- 修复整分钟刷新定时器不可靠的问题
+- 修复 Blue/Green Line 站点 ID（使用正确的 GTFS stop_id）
+
+---
+
 ## 2026-02-05 工作总结
 
 ### 完成的功能

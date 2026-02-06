@@ -773,6 +773,9 @@ struct SettingsView: View {
                 
                 // Language settings
                 languageSection
+                
+                // API Key settings
+                apiKeySection
             }
             .navigationTitle(L10n.settings)
         }
@@ -957,6 +960,46 @@ struct SettingsView: View {
         } header: {
             Label(L10n.language, systemImage: "globe")
                 .foregroundColor(lineColor)
+        }
+    }
+    
+    // MARK: - API Key Section
+    
+    /// Section for API key configuration
+    /// Allows users to enter their own 511.org API key to avoid rate limiting
+    private var apiKeySection: some View {
+        Section {
+            NavigationLink {
+                APIKeySettingsView()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "key.fill")
+                        .foregroundColor(lineColor)
+                        .font(.body)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.apiKey)
+                            .font(.body)
+                        
+                        Text(APIConfig.hasUserAPIKey ? L10n.apiKeyConfigured : L10n.apiKeyNotConfigured)
+                            .font(.caption2)
+                            .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
+                    }
+                    
+                    Spacer()
+                    
+                    // Status indicator
+                    Image(systemName: APIConfig.hasUserAPIKey ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
+                        .font(.caption)
+                }
+            }
+        } header: {
+            Label(L10n.apiKeySettings, systemImage: "key")
+                .foregroundColor(lineColor)
+        } footer: {
+            Text(L10n.apiKeyFooter)
+                .font(.caption2)
         }
     }
     
@@ -1932,6 +1975,194 @@ struct StationSelectionViewInline: View {
         }
         .listStyle(.carousel)
         .navigationTitle(L10n.selectStation)
+    }
+}
+
+// MARK: - APIKeySettingsView
+
+/// View for configuring the user's 511.org API key
+/// Allows users to enter their own API key to avoid rate limiting on shared keys
+struct APIKeySettingsView: View {
+    @ObservedObject private var languageService = LanguageService.shared
+    
+    /// The API key input text
+    @State private var apiKeyInput: String = ""
+    
+    /// Whether to show the save confirmation
+    @State private var showingSaveConfirmation = false
+    
+    /// Whether to show the clear confirmation
+    @State private var showingClearConfirmation = false
+    
+    /// Whether the current input is valid
+    private var isValidInput: Bool {
+        apiKeyInput.isEmpty || APIConfig.isValidAPIKeyFormat(apiKeyInput)
+    }
+    
+    /// Whether the save button should be enabled
+    private var canSave: Bool {
+        !apiKeyInput.isEmpty && APIConfig.isValidAPIKeyFormat(apiKeyInput)
+    }
+    
+    var body: some View {
+        List {
+            // Current status section
+            statusSection
+            
+            // API key input section
+            inputSection
+            
+            // Actions section
+            actionsSection
+            
+            // Help section
+            helpSection
+        }
+        .navigationTitle(L10n.apiKey)
+        .onAppear {
+            // Load existing API key if any
+            apiKeyInput = APIConfig.userAPIKey ?? ""
+        }
+        .alert(L10n.apiKeySaved, isPresented: $showingSaveConfirmation) {
+            Button("OK", role: .cancel) { }
+        }
+        .alert(L10n.apiKeyCleared, isPresented: $showingClearConfirmation) {
+            Button("OK", role: .cancel) { }
+        }
+    }
+    
+    // MARK: - Status Section
+    
+    private var statusSection: some View {
+        Section {
+            HStack {
+                Image(systemName: APIConfig.hasUserAPIKey ? "checkmark.shield.fill" : "exclamationmark.shield.fill")
+                    .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
+                    .font(.title2)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(APIConfig.hasUserAPIKey ? L10n.apiKeyConfigured : L10n.apiKeyNotConfigured)
+                        .font(.body)
+                        .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
+                    
+                    if !APIConfig.hasUserAPIKey {
+                        Text(LanguageService.shared.isEnglish
+                             ? "Shared keys may be rate limited"
+                             : "共享密钥可能被限流")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    
+    // MARK: - Input Section
+    
+    private var inputSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.yourAPIKey)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                TextField(L10n.apiKeyPlaceholder, text: $apiKeyInput)
+                    .font(.system(.caption, design: .monospaced))
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                
+                // Validation indicator
+                if !apiKeyInput.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: isValidInput ? "checkmark.circle" : "xmark.circle")
+                            .foregroundColor(isValidInput ? .green : .red)
+                            .font(.caption2)
+                        
+                        Text(isValidInput
+                             ? (LanguageService.shared.isEnglish ? "Valid format" : "格式正确")
+                             : L10n.apiKeyInvalid)
+                            .font(.caption2)
+                            .foregroundColor(isValidInput ? .green : .red)
+                    }
+                }
+            }
+        } header: {
+            Text(LanguageService.shared.isEnglish ? "Enter API Key" : "输入 API 密钥")
+        }
+    }
+    
+    // MARK: - Actions Section
+    
+    private var actionsSection: some View {
+        Section {
+            // Save button
+            Button(action: saveAPIKey) {
+                HStack {
+                    Image(systemName: "square.and.arrow.down")
+                    Text(L10n.save)
+                }
+            }
+            .disabled(!canSave)
+            
+            // Clear button (only show if user has a key)
+            if APIConfig.hasUserAPIKey {
+                Button(role: .destructive, action: clearAPIKey) {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text(L10n.clearAPIKey)
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Help Section
+    
+    private var helpSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(LanguageService.shared.isEnglish
+                     ? "How to get your API key:"
+                     : "如何获取 API 密钥：")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(LanguageService.shared.isEnglish
+                         ? "1. Visit 511.org/open-data/token"
+                         : "1. 访问 511.org/open-data/token")
+                    Text(LanguageService.shared.isEnglish
+                         ? "2. Create a free account"
+                         : "2. 创建免费账户")
+                    Text(LanguageService.shared.isEnglish
+                         ? "3. Generate an API token"
+                         : "3. 生成 API 令牌")
+                    Text(LanguageService.shared.isEnglish
+                         ? "4. Copy and paste here"
+                         : "4. 复制粘贴到这里")
+                }
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Text(LanguageService.shared.isEnglish ? "Help" : "帮助")
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func saveAPIKey() {
+        guard canSave else { return }
+        APIConfig.userAPIKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        showingSaveConfirmation = true
+    }
+    
+    private func clearAPIKey() {
+        APIConfig.clearUserAPIKey()
+        apiKeyInput = ""
+        showingClearConfirmation = true
     }
 }
 

@@ -207,6 +207,20 @@ enum L10n {
     static var enabledStatus: String { LanguageService.shared.isEnglish ? "enabled" : "已启用" }
     static var disabledStatus: String { LanguageService.shared.isEnglish ? "disabled" : "已禁用" }
     static var doubleTapToEdit: String { LanguageService.shared.isEnglish ? "Double tap to edit" : "双击编辑规则" }
+    
+    // MARK: - API Key Settings
+    static var apiKey: String { LanguageService.shared.isEnglish ? "API Key" : "API 密钥" }
+    static var apiKeySettings: String { LanguageService.shared.isEnglish ? "API Key Settings" : "API 密钥设置" }
+    static var yourAPIKey: String { LanguageService.shared.isEnglish ? "Your API Key" : "你的 API 密钥" }
+    static var apiKeyPlaceholder: String { LanguageService.shared.isEnglish ? "Enter your 511.org API key" : "输入你的 511.org API 密钥" }
+    static var apiKeyConfigured: String { LanguageService.shared.isEnglish ? "Using your API key" : "使用你的 API 密钥" }
+    static var apiKeyNotConfigured: String { LanguageService.shared.isEnglish ? "Using shared key (may be rate limited)" : "使用共享密钥（可能被限流）" }
+    static var getAPIKey: String { LanguageService.shared.isEnglish ? "Get free API key at 511.org" : "在 511.org 免费获取 API 密钥" }
+    static var clearAPIKey: String { LanguageService.shared.isEnglish ? "Clear API Key" : "清除 API 密钥" }
+    static var apiKeyInvalid: String { LanguageService.shared.isEnglish ? "Invalid API key format" : "API 密钥格式无效" }
+    static var apiKeySaved: String { LanguageService.shared.isEnglish ? "API key saved" : "API 密钥已保存" }
+    static var apiKeyCleared: String { LanguageService.shared.isEnglish ? "API key cleared" : "API 密钥已清除" }
+    static var apiKeyFooter: String { LanguageService.shared.isEnglish ? "Get your free API key from 511.org to avoid rate limiting" : "从 511.org 获取免费 API 密钥以避免限流" }
 }
 
 // MARK: - LanguageService

@@ -5,7 +5,7 @@
 ### 完成的功能
 
 #### 1. Widget 刷新节流优化
-创建 `WidgetRefreshThrottler` 类，限制 Widget 刷新调用最小间隔为 2 秒：
+创建 `WidgetRefreshThrottler` 类，限制 Widget 刷新调用最小间隔为 5 秒：
 - 避免短时间内多次调用 `WidgetCenter.shared.reloadAllTimelines()` 造成的性能浪费
 - 替换了代码中 13 处直接调用为节流版本
 - 提供 `forceRefresh()` 方法用于关键更新时绕过节流
@@ -25,6 +25,24 @@
 
 **文件**:
 - `OrangeLineTracker/OrangeLineTracker Watch App/Models/Station.swift` - 重构为懒加载
+
+#### 3. 后台刷新改为固定 20 分钟间隔
+将后台刷新从随机 15-60 分钟改为固定 20 分钟间隔：
+- 更可预测的刷新行为
+- 运营时间外（晚 8 点 - 早 7 点）不刷新，直接调度到下一个运营开始时间
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/Background/BackgroundRefreshManager.swift` - 使用固定间隔
+
+#### 4. 修复 ArrivalView 整分钟刷新停止问题
+修复了 ArrivalView 在长时间显示后整分钟不再刷新的问题：
+- 原因：使用一次性 Timer 在 SwiftUI struct 中重新调度时会因值语义问题失效
+- 解决方案：改用 Combine 的 `Timer.publish` 创建每秒触发的定时器
+- 在每秒检查是否到达整分钟（second == 0），到达时触发 API 刷新
+- 使用 `lastRefreshedMinute` 变量避免同一分钟内重复刷新
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/ContentView.swift` - 重写计时器逻辑
 
 ---
 

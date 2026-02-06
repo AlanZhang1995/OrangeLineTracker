@@ -155,8 +155,8 @@ enum L10n {
     static var pleaseSelectValidStation: String { LanguageService.shared.isEnglish ? "Please select a valid station" : "请选择有效的站点" }
     static var done: String { LanguageService.shared.isEnglish ? "Done" : "完成" }
     static var enableAutoSwitchHint: String { LanguageService.shared.isEnglish ? "Enable to auto-switch commute settings by time" : "启用后可根据时间自动切换通勤设置" }
-    static var smartRefreshHintOff: String { LanguageService.shared.isEnglish ? "Random interval (15-60 min)" : "使用随机间隔 (15-60分钟)" }
-    static var smartRefreshFooter: String { LanguageService.shared.isEnglish ? "Smart refresh adjusts frequency based on train arrival time" : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔" }
+    static var smartRefreshHintOff: String { LanguageService.shared.isEnglish ? "Fixed interval (20 min)" : "使用固定间隔 (20分钟)" }
+    static var smartRefreshFooter: String { LanguageService.shared.isEnglish ? "Smart refresh adjusts frequency based on train arrival time" : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用固定20分钟间隔" }
     
     // MARK: - Time Rule Summary
     static var timeRulesDisabled: String { LanguageService.shared.isEnglish ? "Time rules disabled" : "时间规则已禁用" }

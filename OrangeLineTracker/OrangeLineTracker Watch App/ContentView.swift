@@ -172,8 +172,11 @@ struct ArrivalView: View {
     /// Current time for countdown calculation, triggers view refresh
     @State private var currentTime = Date()
     
-    /// Timer for refreshing at each minute mark (:00 seconds)
-    @State private var minuteTimer: Timer?
+    /// Timer cancellable for cleanup
+    @State private var timerCancellable: AnyCancellable?
+    
+    /// Flag to track if view is active (for timer management)
+    @State private var isViewActive = false
     
     // MARK: - Computed Properties
     
@@ -219,6 +222,8 @@ struct ArrivalView: View {
         }
         .navigationTitle(L10n.arrivalTime)
         .onAppear {
+            isViewActive = true
+            
             // Reset current time when view appears
             currentTime = Date()
             
@@ -229,68 +234,59 @@ struct ArrivalView: View {
                 }
             }
             
-            // Schedule timer to fire at next minute mark
-            scheduleMinuteTimer()
+            // Start the minute-aligned timer using Combine
+            startMinuteTimer()
         }
         .onDisappear {
+            isViewActive = false
+            
             // Clean up timer when view disappears
-            minuteTimer?.invalidate()
-            minuteTimer = nil
+            timerCancellable?.cancel()
+            timerCancellable = nil
         }
     }
     
-    // MARK: - Minute Timer Scheduling
+    // MARK: - Minute Timer Using Combine
     
-    /// Schedules a timer to fire at the next minute mark (:00 seconds)
-    /// Timer is added to .common RunLoop mode to ensure it fires even during scrolling
-    private func scheduleMinuteTimer() {
-        // Invalidate existing timer
-        minuteTimer?.invalidate()
-        minuteTimer = nil
+    /// Starts a timer that fires every second and triggers refresh at minute marks (:00 seconds)
+    /// Uses Combine's Timer.publish for reliable SwiftUI integration
+    /// This approach is more reliable than one-shot timers in SwiftUI structs
+    private func startMinuteTimer() {
+        // Cancel any existing timer
+        timerCancellable?.cancel()
         
-        // Calculate seconds until next minute mark
-        let now = Date()
-        let calendar = Calendar.current
-        let seconds = calendar.component(.second, from: now)
-        let nanoseconds = calendar.component(.nanosecond, from: now)
-        
-        // Calculate precise time until next minute mark (add small buffer to ensure we're past :00)
-        let secondsUntilNextMinute = Double(60 - seconds) - Double(nanoseconds) / 1_000_000_000.0 + 0.1
+        // Track the last minute we refreshed to avoid duplicate refreshes
+        var lastRefreshedMinute: Int = -1
         
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
-        print("ArrivalView: ⏰ Scheduling timer to fire in \(String(format: "%.1f", secondsUntilNextMinute))s (current: \(formatter.string(from: now)))")
+        print("ArrivalView: ⏰ Starting minute-aligned timer (current: \(formatter.string(from: Date())))")
         
-        // Schedule repeating timer that fires every 60 seconds starting at next minute mark
-        let timer = Timer(timeInterval: secondsUntilNextMinute, repeats: false) { _ in
-            // This closure captures self, but since ArrivalView is a struct and
-            // the timer is invalidated in onDisappear, this is safe
-            self.onMinuteMark()
-            
-            // Reschedule for next minute
-            DispatchQueue.main.async {
-                self.scheduleMinuteTimer()
+        // Use Timer.publish which integrates well with SwiftUI
+        // Fire every second to check if we've hit a minute mark
+        timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak viewModel] date in
+                // Always update current time for countdown display
+                currentTime = date
+                
+                // Check if we're at a minute mark (second == 0)
+                let calendar = Calendar.current
+                let second = calendar.component(.second, from: date)
+                let minute = calendar.component(.minute, from: date)
+                
+                // Refresh at minute mark if we haven't already refreshed this minute
+                if second == 0 && minute != lastRefreshedMinute {
+                    lastRefreshedMinute = minute
+                    
+                    if let vm = viewModel, vm.selectedStation != nil && !vm.isLoading && isViewActive {
+                        print("ArrivalView: 🔄 Auto-refreshing at minute mark \(formatter.string(from: date))")
+                        Task {
+                            await vm.refreshPredictions()
+                        }
+                    }
+                }
             }
-        }
-        
-        // Add timer to .common mode to ensure it fires during scrolling
-        RunLoop.main.add(timer, forMode: .common)
-        minuteTimer = timer
-    }
-    
-    /// Called at each minute mark (:00 seconds)
-    private func onMinuteMark() {
-        currentTime = Date()
-        
-        // Refresh API data at each minute mark
-        if viewModel.selectedStation != nil && !viewModel.isLoading {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm:ss"
-            print("ArrivalView: 🔄 Auto-refreshing at minute mark \(formatter.string(from: currentTime))")
-            Task {
-                await viewModel.refreshPredictions()
-            }
-        }
     }
     
     // MARK: - Station Header
@@ -929,7 +925,7 @@ struct SettingsView: View {
                         
                         Text(metroViewModel.storageService.isSmartRefreshEnabled
                              ? L10n.smartRefreshDesc
-                             : (LanguageService.shared.isEnglish ? "Random interval (15-60 min)" : "使用随机间隔 (15-60分钟)"))
+                             : (LanguageService.shared.isEnglish ? "Fixed interval (20 min)" : "使用固定间隔 (20分钟)"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -941,8 +937,8 @@ struct SettingsView: View {
                 .foregroundColor(lineColor)
         } footer: {
             Text(LanguageService.shared.isEnglish
-                 ? "Smart refresh adjusts frequency based on train arrival time"
-                 : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔")
+                 ? "Smart refresh adjusts frequency based on train arrival time. Fixed 20 min interval when disabled."
+                 : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用固定20分钟间隔")
                 .font(.caption2)
         }
     }

@@ -42,11 +42,10 @@ class BackgroundRefreshManager {
     private static let veryFarRefreshInterval: TimeInterval = 12 * 60   // 12 min (>20 min arrival)
     private static let recoveryRefreshInterval: TimeInterval = 3 * 60   // 3 min (no data/error)
     
-    // MARK: - Random Refresh Interval (when smart refresh is disabled)
+    // MARK: - Fixed Refresh Interval (when smart refresh is disabled)
     
-    /// 随机刷新间隔范围（15-60 分钟）
-    private static let randomRefreshMinInterval: TimeInterval = 15 * 60  // 15 min
-    private static let randomRefreshMaxInterval: TimeInterval = 60 * 60  // 60 min
+    /// 固定刷新间隔：20 分钟
+    private static let fixedRefreshInterval: TimeInterval = 20 * 60  // 20 min
     
     // MARK: - Service Hours (VTA Orange Line)
     
@@ -168,9 +167,9 @@ class BackgroundRefreshManager {
             effectiveInterval = max(smartInterval, Self.minimumRefreshInterval)
             print("BackgroundRefreshManager: 🧠 Smart refresh enabled")
         } else {
-            // 随机刷新：10-20 分钟随机间隔
-            effectiveInterval = calculateRandomRefreshInterval()
-            print("BackgroundRefreshManager: 🎲 Random refresh enabled")
+            // 固定刷新：20 分钟间隔
+            effectiveInterval = Self.fixedRefreshInterval
+            print("BackgroundRefreshManager: ⏱️ Fixed 20-min refresh enabled")
         }
         
         // If we have a last refresh date, ensure minimum interval
@@ -187,12 +186,11 @@ class BackgroundRefreshManager {
         return now.addingTimeInterval(effectiveInterval)
     }
     
-    /// 计算随机刷新间隔（10-20 分钟）
-    /// - Returns: 随机间隔（秒）
-    func calculateRandomRefreshInterval() -> TimeInterval {
-        let interval = TimeInterval.random(in: Self.randomRefreshMinInterval...Self.randomRefreshMaxInterval)
-        print("BackgroundRefreshManager: Random refresh interval = \(Int(interval/60)) min")
-        return interval
+    /// 获取固定刷新间隔（20 分钟）
+    /// - Returns: 固定间隔（秒）
+    func getFixedRefreshInterval() -> TimeInterval {
+        print("BackgroundRefreshManager: Fixed refresh interval = 20 min")
+        return Self.fixedRefreshInterval
     }
     
     // MARK: - Service Hours Check

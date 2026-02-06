@@ -146,7 +146,8 @@ class StorageService: StorageServiceProtocol {
     /// Whether smart background refresh is enabled
     /// When true: uses smart refresh based on arrival time
     /// When false: uses random interval (10-20 minutes)
-    var isSmartRefreshEnabled: Bool = true
+    /// Default: false (random interval is more battery-friendly)
+    var isSmartRefreshEnabled: Bool = false
     
     /// Cached arrival minutes for widget
     var cachedArrivalMinutes: Int?
@@ -317,11 +318,11 @@ class StorageService: StorageServiceProtocol {
         // Load time rule enabled state
         isTimeRuleEnabled = userDefaults.bool(forKey: StorageKeys.isTimeRuleEnabled)
         
-        // Load smart refresh enabled state (default to true if not set)
+        // Load smart refresh enabled state (default to false if not set)
         if userDefaults.object(forKey: StorageKeys.isSmartRefreshEnabled) != nil {
             isSmartRefreshEnabled = userDefaults.bool(forKey: StorageKeys.isSmartRefreshEnabled)
         } else {
-            isSmartRefreshEnabled = true
+            isSmartRefreshEnabled = false
         }
         
         // Load selected line ID

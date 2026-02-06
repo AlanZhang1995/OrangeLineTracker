@@ -117,6 +117,7 @@ struct Prediction: Identifiable, Codable, Equatable {
     }
     
     /// Formatted display string for arrival time (real-time countdown)
+    /// Shows 1 minute less than actual to encourage users to leave early
     /// - Parameter currentTime: The current time to calculate against (defaults to now)
     /// - Returns: A string like "3 分钟", "即将到站", or "进站中"
     func arrivalTimeDisplay(at currentTime: Date = Date()) -> String {
@@ -127,16 +128,19 @@ struct Prediction: Identifiable, Codable, Equatable {
             return ArrivalStatus.boarding.displayText
         case .scheduled, .delayed:
             if let minutes = currentMinutesUntilArrival(at: currentTime) {
-                if minutes <= 0 {
+                // Subtract 1 minute to encourage users to leave early (better early than late)
+                let displayMinutes = max(0, minutes - 1)
+                if displayMinutes <= 0 {
                     return ArrivalStatus.arriving.displayText
                 }
-                return "\(minutes) 分钟"
+                return "\(displayMinutes) 分钟"
             }
             return arrivalStatus.displayText
         }
     }
     
     /// Formatted display string for arrival time in English (real-time countdown)
+    /// Shows 1 minute less than actual to encourage users to leave early
     /// - Parameter currentTime: The current time to calculate against (defaults to now)
     /// - Returns: A string like "3 min", "Arriving", or "Boarding"
     func arrivalTimeDisplayEnglish(at currentTime: Date = Date()) -> String {
@@ -147,10 +151,12 @@ struct Prediction: Identifiable, Codable, Equatable {
             return ArrivalStatus.boarding.displayTextEnglish
         case .scheduled, .delayed:
             if let minutes = currentMinutesUntilArrival(at: currentTime) {
-                if minutes <= 0 {
+                // Subtract 1 minute to encourage users to leave early (better early than late)
+                let displayMinutes = max(0, minutes - 1)
+                if displayMinutes <= 0 {
                     return ArrivalStatus.arriving.displayTextEnglish
                 }
-                return "\(minutes) min"
+                return "\(displayMinutes) min"
             }
             return arrivalStatus.displayTextEnglish
         }

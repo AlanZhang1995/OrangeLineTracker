@@ -29,6 +29,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D43A3FA12F32ABE8001A8B5C"
+               BuildableName = "OrangeLineWidgetExtension.appex"
+               BlueprintName = "OrangeLineWidgetExtension"
+               ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "D43A3F102F325D61001A8B5C"
                BuildableName = "OrangeLineTracker.app"
                BlueprintName = "OrangeLineTracker"
@@ -43,6 +57,19 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D43A3F422F325D64001A8B5C"
+               BuildableName = "OrangeLineTracker Watch AppTests.xctest"
+               BlueprintName = "OrangeLineTracker Watch AppTests"
+               ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

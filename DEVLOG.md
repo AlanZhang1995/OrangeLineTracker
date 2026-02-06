@@ -1,5 +1,33 @@
 # VTA Transit Tracker 开发日志
 
+## 2026-02-06 工作总结
+
+### 完成的功能
+
+#### 1. Widget 刷新节流优化
+创建 `WidgetRefreshThrottler` 类，限制 Widget 刷新调用最小间隔为 2 秒：
+- 避免短时间内多次调用 `WidgetCenter.shared.reloadAllTimelines()` 造成的性能浪费
+- 替换了代码中 13 处直接调用为节流版本
+- 提供 `forceRefresh()` 方法用于关键更新时绕过节流
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/Services/WidgetRefreshThrottler.swift` - 新增
+- `OrangeLineTracker/OrangeLineTracker Watch App/ViewModels/MetroViewModel.swift` - 使用 `reloadWidgets()` 辅助函数
+- `OrangeLineTracker/OrangeLineTracker Watch App/ViewModels/TimeRuleViewModel.swift` - 使用节流刷新
+- `OrangeLineTracker/OrangeLineTracker Watch App/Background/BackgroundRefreshManager.swift` - 使用节流刷新
+
+#### 2. 站点数据懒加载
+将三条线路的站点数据从启动时全部加载改为按需懒加载：
+- `OrangeLineStations.stations` - 首次访问时才初始化 26 个站点
+- `BlueLineStations.stations` - 首次访问时才初始化 26 个站点
+- `GreenLineStations.stations` - 首次访问时才初始化 26 个站点
+- 用户只使用 Orange Line 时，Blue/Green Line 数据不占用内存
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/Models/Station.swift` - 重构为懒加载
+
+---
+
 ## 2026-02-05 工作总结 (续)
 
 ### 完成的功能

@@ -61,6 +61,13 @@ Apple Watch 应用，实时追踪 VTA 轻轨到站时间。支持 Orange、Blue�
 - **511.org API** - VTA 实时数据源
 - **App Groups** - Watch App 与 Widget 数据共享
 
+## ⚡ 性能优化
+
+- **Widget 刷新节流** - `WidgetRefreshThrottler` 限制最小 2 秒间隔，避免过度刷新
+- **站点数据懒加载** - 按线路懒加载站点数据，未使用的线路不占用内存
+- **API Key 轮换** - 5 个备用 key 轮换使用，降低单 key 限流风险
+- **夜间暂停刷新** - 停运时段 (11pm-6am) 自动暂停后台刷新
+
 ## 📋 系统要求
 
 - watchOS 10.0+

@@ -74,7 +74,7 @@ class TimeRuleViewModel: ObservableObject {
         loadRules()
         
         // Notify widget to reload with updated rules
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetRefreshThrottler.shared.requestRefresh()
         
         isSaving = false
     }
@@ -119,7 +119,7 @@ class TimeRuleViewModel: ObservableObject {
         loadRules()
         
         // Notify widget to reload with updated rules
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetRefreshThrottler.shared.requestRefresh()
         
         isSaving = false
     }
@@ -135,7 +135,7 @@ class TimeRuleViewModel: ObservableObject {
         loadRules()
         
         // Notify widget to reload with updated rules
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetRefreshThrottler.shared.requestRefresh()
         
         isSaving = false
     }
@@ -192,7 +192,7 @@ class TimeRuleViewModel: ObservableObject {
         isTimeRuleEnabled = enabled
         
         // Notify widget to reload with updated enabled state
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetRefreshThrottler.shared.requestRefresh()
         
         isSaving = false
     }

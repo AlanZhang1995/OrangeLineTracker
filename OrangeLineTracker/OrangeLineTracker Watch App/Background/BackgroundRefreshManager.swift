@@ -376,7 +376,7 @@ class BackgroundRefreshManager {
                     lineColor: lineColor
                 )
             }
-            WidgetCenter.shared.reloadAllTimelines()
+            WidgetRefreshThrottler.shared.requestRefresh()
             
             // 更新 Complication 显示停运状态
             if let station = storageService.selectedStation,
@@ -432,7 +432,7 @@ class BackgroundRefreshManager {
                     lineName: lineName,
                     lineColor: lineColor
                 )
-                WidgetCenter.shared.reloadAllTimelines()
+                WidgetRefreshThrottler.shared.requestRefresh()
             }
             
             // Use the time rule's station and direction
@@ -508,7 +508,7 @@ class BackgroundRefreshManager {
                 )
                 
                 // Notify widget to reload with new data
-                WidgetCenter.shared.reloadAllTimelines()
+                WidgetRefreshThrottler.shared.requestRefresh()
                 
                 // Record successful refresh
                 recordSuccessfulRefresh()

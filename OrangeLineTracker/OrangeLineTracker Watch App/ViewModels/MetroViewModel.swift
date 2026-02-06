@@ -9,6 +9,13 @@ import Foundation
 import Combine
 import WidgetKit
 
+// MARK: - Widget Refresh Helper
+
+/// Convenience function for throttled widget refresh
+private func reloadWidgets() {
+    WidgetRefreshThrottler.shared.requestRefresh()
+}
+
 // MARK: - MetroViewModel
 
 /// Main ViewModel for the OrangeLineTracker app
@@ -150,7 +157,7 @@ class MetroViewModel: ObservableObject {
         storageService.save()
         
         // Notify widget of line change
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets()
     }
     
     /// Loads all available lines from the API
@@ -205,7 +212,7 @@ class MetroViewModel: ObservableObject {
         predictions = []
         
         // Notify widget of station change immediately
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets()
         
         // Reset background refresh schedule for new station
         BackgroundRefreshManager.shared.resetAndReschedule()
@@ -230,7 +237,7 @@ class MetroViewModel: ObservableObject {
         predictions = []
         
         // Notify widget of direction change immediately
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets()
         
         // Reset background refresh schedule for new direction
         BackgroundRefreshManager.shared.resetAndReschedule()
@@ -255,7 +262,7 @@ class MetroViewModel: ObservableObject {
         predictions = []
         
         // Notify widget of direction change immediately
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets()
         
         // Reset background refresh schedule for new direction
         BackgroundRefreshManager.shared.resetAndReschedule()
@@ -358,7 +365,7 @@ class MetroViewModel: ObservableObject {
                 lineName: selectedLine?.name,
                 lineColor: selectedLine?.colorHex
             )
-            WidgetCenter.shared.reloadAllTimelines()
+            reloadWidgets()
             
         } catch let error as VTAServiceError {
             // Handle VTA service errors
@@ -450,7 +457,7 @@ class MetroViewModel: ObservableObject {
             lastAppliedRuleId = activeRule.id
             
             // Notify widget of the change immediately (will show no data until API returns)
-            WidgetCenter.shared.reloadAllTimelines()
+            reloadWidgets()
             
             // Refresh predictions for the new settings
             // Validates: Requirements 8.5 - auto-refresh when time rule takes effect

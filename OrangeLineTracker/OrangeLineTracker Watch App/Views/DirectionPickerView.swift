@@ -19,6 +19,9 @@ struct DirectionPickerView: View {
     
     // MARK: - Properties
     
+    /// Language service for localization updates
+    @ObservedObject private var languageService = LanguageService.shared
+    
     /// Binding to the currently selected direction ID (e.g., "E", "W", "N", "S")
     @Binding var selectedDirectionId: String
     

@@ -18,6 +18,9 @@ struct LineSelectorView: View {
     
     // MARK: - Properties
     
+    /// Language service for localization updates
+    @ObservedObject private var languageService = LanguageService.shared
+    
     /// ViewModel for line selection and management
     @ObservedObject var viewModel: LineViewModel
     

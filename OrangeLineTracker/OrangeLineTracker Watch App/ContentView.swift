@@ -167,6 +167,7 @@ enum Tab: Int, CaseIterable {
 /// - Validates: Requirements 10.1 (display current line name), 10.2 (use line color as theme)
 struct ArrivalView: View {
     @ObservedObject var viewModel: MetroViewModel
+    @ObservedObject private var languageService = LanguageService.shared
     
     /// Current time for countdown calculation, triggers view refresh
     @State private var currentTime = Date()
@@ -535,6 +536,7 @@ struct ArrivalView: View {
 /// - Validates: Requirements 1.1, 1.2, 1.3, 1.5, 4.1, 4.2, 4.4, 6.2
 struct StationPickerView: View {
     @ObservedObject var viewModel: MetroViewModel
+    @ObservedObject private var languageService = LanguageService.shared
     
     /// The color for the current line (parsed from hex)
     private var lineColor: Color {
@@ -967,6 +969,7 @@ struct SettingsView: View {
 /// - Validates: Requirements 8.1 (configure time rules), 8.2 (save trigger time, station, direction), 8.4 (support multiple rules)
 struct TimeRuleConfigView: View {
     @ObservedObject var viewModel: TimeRuleViewModel
+    @ObservedObject private var languageService = LanguageService.shared
     
     /// State for showing the add rule sheet
     @State private var showingAddRule = false
@@ -1318,6 +1321,7 @@ struct TimeRuleRowView: View {
 struct TimeRuleEditView: View {
     /// Reference to the view model for validation
     @ObservedObject var viewModel: TimeRuleViewModel
+    @ObservedObject private var languageService = LanguageService.shared
     
     /// Edit mode (add new or edit existing)
     let mode: TimeRuleEditMode

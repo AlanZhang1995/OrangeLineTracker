@@ -4,7 +4,25 @@
 
 ### 完成的功能
 
-#### 1. Widget 刷新节流优化
+#### 1. 站点验证脚本
+创建 `validate_stations.py` 用于验证所有站点 API 数据：
+- 从 `Station.swift` 提取正确的 511.org stop codes
+- 支持三条线路：Orange (26站), Blue (26站), Green (26站)
+- 显示本地时间的到站预测
+- 自动识别终点站（始发站无到达时间）
+- 支持抽样测试 (`--sample N`) 和完整测试 (`--all`)
+
+**用法**:
+```bash
+python3 validate_stations.py           # 每条线抽查 5 站
+python3 validate_stations.py --quick   # 每条线 1 站
+python3 validate_stations.py --all     # 测试所有站
+python3 validate_stations.py --line orange  # 只测 Orange Line
+```
+
+**文件**: `validate_stations.py` - 新增
+
+#### 2. Widget 刷新节流优化
 创建 `WidgetRefreshThrottler` 类，限制 Widget 刷新调用最小间隔为 5 秒：
 - 避免短时间内多次调用 `WidgetCenter.shared.reloadAllTimelines()` 造成的性能浪费
 - 替换了代码中 13 处直接调用为节流版本

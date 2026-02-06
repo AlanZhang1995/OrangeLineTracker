@@ -10,14 +10,14 @@ import Foundation
 import WidgetKit
 
 /// Throttles widget refresh calls to avoid excessive reloads
-/// Ensures at least 2 seconds between refreshes
+/// Ensures at least 5 seconds between refreshes
 final class WidgetRefreshThrottler {
     
     /// Shared instance
     static let shared = WidgetRefreshThrottler()
     
-    /// Minimum interval between refreshes (2 seconds)
-    private let minimumInterval: TimeInterval = 2.0
+    /// Minimum interval between refreshes (5 seconds)
+    private let minimumInterval: TimeInterval = 5.0
     
     /// Last refresh timestamp
     private var lastRefreshTime: Date?

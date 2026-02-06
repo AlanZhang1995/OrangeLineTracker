@@ -157,37 +157,59 @@ enum OrangeLineStations {
 
 /// Static data containing all VTA Blue Line stations
 /// Blue Line runs from Baypointe to Santa Teresa via Tasman branch
-/// Station IDs are from 511.org SIRI API
+/// Station IDs are from 511.org GTFS data (stops.txt)
+/// 
+/// ============================================================================
+/// 511.org API STOP_ID MAPPING (From GTFS - Verified 2026-02-05):
+/// ============================================================================
+/// 
+/// CRITICAL: Each direction has its OWN unique stop_id sequence!
+/// - Northbound (to Baypointe): 64801, 64759, 64758, 64757, ... 64736
+/// - Southbound (to Santa Teresa): 64761, 64762, 64763, 64764, ... 64785
+/// 
+/// The stop_id automatically includes direction - querying 64751 returns
+/// Northbound trains, querying 64770 returns Southbound trains.
+/// 
+/// API Testing Confirmed:
+/// - 64751 (Civic Center N) → Returns Blue:N, Green:N trains ✓
+/// - 64770 (Civic Center S) → Returns Blue:S, Green:S trains ✓
+/// - 64746 (Convention Center N) → Returns N direction data ✓
+/// - 64775 (Convention Center S) → Returns S direction data ✓
+/// ============================================================================
 enum BlueLineStations {
     /// All Blue Line stations in geographic order (North to South)
     /// Blue Line: Baypointe ↔ Santa Teresa (goes through Tasman, River Oaks, NOT through Old Ironsides/Great America)
+    /// 
+    /// Stop IDs from GTFS stops.txt - each direction has unique stop_id
     static let stations: [Station] = [
-        Station(id: "64801", lineId: "Blue", name: "Baypointe", shortName: "BPT", order: 0, platformIds: ["N": "64801", "S": "64806"]),
-        Station(id: "64762", lineId: "Blue", name: "Tasman", shortName: "TSM", order: 1, platformIds: ["N": "64762", "S": "64763"]),
-        Station(id: "64758", lineId: "Blue", name: "River Oaks", shortName: "ROK", order: 2, platformIds: ["N": "64758", "S": "64759"]),
-        Station(id: "64764", lineId: "Blue", name: "Orchard", shortName: "ORC", order: 3, platformIds: ["N": "64764", "S": "64765"]),
-        Station(id: "64770", lineId: "Blue", name: "Bonaventura", shortName: "BNV", order: 4, platformIds: ["N": "64770", "S": "64771"]),
-        Station(id: "64768", lineId: "Blue", name: "Component", shortName: "CMP", order: 5, platformIds: ["N": "64768", "S": "64769"]),
-        Station(id: "64766", lineId: "Blue", name: "Karina", shortName: "KRN", order: 6, platformIds: ["N": "64766", "S": "64767"]),
-        Station(id: "64772", lineId: "Blue", name: "Metro/Airport", shortName: "APT", order: 7, platformIds: ["N": "64772", "S": "64773"]),
-        Station(id: "64774", lineId: "Blue", name: "Gish", shortName: "GSH", order: 8, platformIds: ["N": "64774", "S": "64775"]),
-        Station(id: "64776", lineId: "Blue", name: "Civic Center", shortName: "CVC", order: 9, platformIds: ["N": "64776", "S": "64777"]),
-        Station(id: "64778", lineId: "Blue", name: "Japantown/Ayer", shortName: "JPN", order: 10, platformIds: ["N": "64778", "S": "64779"]),
-        Station(id: "64780", lineId: "Blue", name: "St. James", shortName: "STJ", order: 11, platformIds: ["N": "64780", "S": "64781"]),
-        Station(id: "64782", lineId: "Blue", name: "Santa Clara", shortName: "STC", order: 12, platformIds: ["N": "64782", "S": "64783"]),
-        Station(id: "64784", lineId: "Blue", name: "Paseo de San Antonio", shortName: "PSA", order: 13, platformIds: ["N": "64784", "S": "64785"]),
-        Station(id: "64824", lineId: "Blue", name: "Convention Center", shortName: "CNV", order: 14, platformIds: ["N": "64824", "S": "64825"]),
-        Station(id: "64848", lineId: "Blue", name: "Children's Discovery Museum", shortName: "CDM", order: 15, platformIds: ["N": "64848", "S": "64849"]),
-        Station(id: "64828", lineId: "Blue", name: "Virginia", shortName: "VRG", order: 16, platformIds: ["N": "64828", "S": "64829"]),
-        Station(id: "64830", lineId: "Blue", name: "Tamien", shortName: "TMN", order: 17, platformIds: ["N": "64830", "S": "64831"]),
-        Station(id: "64832", lineId: "Blue", name: "Curtner", shortName: "CRT", order: 18, platformIds: ["N": "64832", "S": "64833"]),
-        Station(id: "64834", lineId: "Blue", name: "Capitol", shortName: "CPT", order: 19, platformIds: ["N": "64834", "S": "64835"]),
-        Station(id: "64836", lineId: "Blue", name: "Branham", shortName: "BRH", order: 20, platformIds: ["N": "64836", "S": "64837"]),
-        Station(id: "64838", lineId: "Blue", name: "Ohlone/Chynoweth", shortName: "OHL", order: 21, platformIds: ["N": "64838", "S": "64839"]),
-        Station(id: "64840", lineId: "Blue", name: "Blossom Hill", shortName: "BLH", order: 22, platformIds: ["N": "64840", "S": "64841"]),
-        Station(id: "64842", lineId: "Blue", name: "Snell", shortName: "SNL", order: 23, platformIds: ["N": "64842", "S": "64843"]),
-        Station(id: "64844", lineId: "Blue", name: "Cottle", shortName: "CTL", order: 24, platformIds: ["N": "64844", "S": "64845"]),
-        Station(id: "64846", lineId: "Blue", name: "Santa Teresa", shortName: "STT", order: 25, platformIds: ["N": "64846", "S": "64847"])
+        // Baypointe - northern terminus
+        Station(id: "64801", lineId: "Blue", name: "Baypointe", shortName: "BPT", order: 0, platformIds: ["N": "64801", "S": "64761"]),
+        // Tasman branch stations
+        Station(id: "64759", lineId: "Blue", name: "Tasman", shortName: "TSM", order: 1, platformIds: ["N": "64759", "S": "64762"]),
+        Station(id: "64758", lineId: "Blue", name: "River Oaks", shortName: "ROK", order: 2, platformIds: ["N": "64758", "S": "64763"]),
+        Station(id: "64757", lineId: "Blue", name: "Orchard", shortName: "ORC", order: 3, platformIds: ["N": "64757", "S": "64764"]),
+        Station(id: "64756", lineId: "Blue", name: "Bonaventura", shortName: "BNV", order: 4, platformIds: ["N": "64756", "S": "64765"]),
+        Station(id: "64755", lineId: "Blue", name: "Component", shortName: "CMP", order: 5, platformIds: ["N": "64755", "S": "64766"]),
+        Station(id: "64754", lineId: "Blue", name: "Karina", shortName: "KRN", order: 6, platformIds: ["N": "64754", "S": "64767"]),
+        Station(id: "64753", lineId: "Blue", name: "Metro/Airport", shortName: "APT", order: 7, platformIds: ["N": "64753", "S": "64768"]),
+        Station(id: "64752", lineId: "Blue", name: "Gish", shortName: "GSH", order: 8, platformIds: ["N": "64752", "S": "64769"]),
+        Station(id: "64751", lineId: "Blue", name: "Civic Center", shortName: "CVC", order: 9, platformIds: ["N": "64751", "S": "64770"]),
+        Station(id: "64750", lineId: "Blue", name: "Japantown/Ayer", shortName: "JPN", order: 10, platformIds: ["N": "64750", "S": "64771"]),
+        Station(id: "64749", lineId: "Blue", name: "St. James", shortName: "STJ", order: 11, platformIds: ["N": "64749", "S": "64772"]),
+        Station(id: "64748", lineId: "Blue", name: "Santa Clara", shortName: "STC", order: 12, platformIds: ["N": "64748", "S": "64773"]),
+        Station(id: "64747", lineId: "Blue", name: "San Antonio", shortName: "SAN", order: 13, platformIds: ["N": "64747", "S": "64774"]),
+        Station(id: "64746", lineId: "Blue", name: "Convention Center", shortName: "CNV", order: 14, platformIds: ["N": "64746", "S": "64775"]),
+        Station(id: "64745", lineId: "Blue", name: "Children's Discovery Museum", shortName: "CDM", order: 15, platformIds: ["N": "64745", "S": "64776"]),
+        Station(id: "64744", lineId: "Blue", name: "Virginia", shortName: "VRG", order: 16, platformIds: ["N": "64744", "S": "64777"]),
+        Station(id: "64743", lineId: "Blue", name: "Tamien", shortName: "TMN", order: 17, platformIds: ["N": "64743", "S": "64778"]),
+        Station(id: "64742", lineId: "Blue", name: "Curtner", shortName: "CRT", order: 18, platformIds: ["N": "64742", "S": "64779"]),
+        Station(id: "64741", lineId: "Blue", name: "Capitol", shortName: "CPT", order: 19, platformIds: ["N": "64741", "S": "64780"]),
+        Station(id: "64740", lineId: "Blue", name: "Branham", shortName: "BRH", order: 20, platformIds: ["N": "64740", "S": "64781"]),
+        Station(id: "64731", lineId: "Blue", name: "Ohlone/Chynoweth", shortName: "OHL", order: 21, platformIds: ["N": "64731", "S": "64733"]),
+        Station(id: "64739", lineId: "Blue", name: "Blossom Hill", shortName: "BLH", order: 22, platformIds: ["N": "64739", "S": "64782"]),
+        Station(id: "64738", lineId: "Blue", name: "Snell", shortName: "SNL", order: 23, platformIds: ["N": "64738", "S": "64783"]),
+        Station(id: "64737", lineId: "Blue", name: "Cottle", shortName: "CTL", order: 24, platformIds: ["N": "64737", "S": "64784"]),
+        Station(id: "64736", lineId: "Blue", name: "Santa Teresa", shortName: "STT", order: 25, platformIds: ["N": "64736", "S": "64785"])
     ]
     
     /// Total number of stations on the Blue Line
@@ -213,39 +235,63 @@ enum BlueLineStations {
 
 /// Static data containing all VTA Green Line stations
 /// Green Line runs from Old Ironsides to Winchester via San Jose Diridon
-/// Station IDs are from 511.org SIRI API
+/// Station IDs are from 511.org GTFS data (stops.txt)
+///
+/// ============================================================================
+/// 511.org API STOP_ID MAPPING FOR GREEN LINE (From GTFS - Verified 2026-02-05):
+/// ============================================================================
+/// 
+/// Green Line has THREE sections with different stop_id patterns:
+/// 
+/// 1. SHARED WITH ORANGE LINE (Old Ironsides → Champion):
+///    - Uses Orange Line E/W stop_ids (64797-64810 range)
+///    - E platform = Southbound (toward Winchester)
+///    - W platform = Northbound (toward Old Ironsides)
+/// 
+/// 2. SHARED WITH BLUE LINE (Tasman → Convention Center):
+///    - Uses Blue Line N/S stop_ids (64746-64770 range)
+///    - Same as Blue Line mapping
+/// 
+/// 3. WINCHESTER BRANCH (San Fernando → Winchester):
+///    - Uses dedicated stop_ids (65374-65389 range)
+///    - 65374-65380 = Northbound (toward Old Ironsides)
+///    - 65381-65387 = Southbound (toward Winchester)
+/// ============================================================================
 enum GreenLineStations {
     /// All Green Line stations in geographic order (North to South)
-    /// Green Line: Old Ironsides ↔ Winchester (via Great America, Tasman branch, NOT through Lockheed Martin/Borregas)
+    /// Green Line: Old Ironsides ↔ Winchester (via Great America, Tasman branch)
+    /// 
+    /// Stop IDs from GTFS stops.txt - each direction has unique stop_id
     static let stations: [Station] = [
-        // Old Ironsides through Champion use E/W platform IDs (shared with Orange Line)
-        Station(id: "64797", lineId: "Green", name: "Old Ironsides", shortName: "OIS", order: 0, platformIds: ["N": "64797", "S": "64810"]),
-        Station(id: "64798", lineId: "Green", name: "Great America", shortName: "GAM", order: 1, platformIds: ["N": "64798", "S": "64809"]),
-        Station(id: "64799", lineId: "Green", name: "Lick Mill", shortName: "LML", order: 2, platformIds: ["N": "64799", "S": "64808"]),
-        Station(id: "64800", lineId: "Green", name: "Champion", shortName: "CHP", order: 3, platformIds: ["N": "64800", "S": "64807"]),
-        // Tasman branch uses N/S platform IDs
-        Station(id: "64762", lineId: "Green", name: "Tasman", shortName: "TSM", order: 4, platformIds: ["N": "64762", "S": "64763"]),
-        Station(id: "64758", lineId: "Green", name: "River Oaks", shortName: "ROK", order: 5, platformIds: ["N": "64758", "S": "64759"]),
-        Station(id: "64764", lineId: "Green", name: "Orchard", shortName: "ORC", order: 6, platformIds: ["N": "64764", "S": "64765"]),
-        Station(id: "64770", lineId: "Green", name: "Bonaventura", shortName: "BNV", order: 7, platformIds: ["N": "64770", "S": "64771"]),
-        Station(id: "64768", lineId: "Green", name: "Component", shortName: "CMP", order: 8, platformIds: ["N": "64768", "S": "64769"]),
-        Station(id: "64766", lineId: "Green", name: "Karina", shortName: "KRN", order: 9, platformIds: ["N": "64766", "S": "64767"]),
-        Station(id: "64772", lineId: "Green", name: "Metro/Airport", shortName: "APT", order: 10, platformIds: ["N": "64772", "S": "64773"]),
-        Station(id: "64774", lineId: "Green", name: "Gish", shortName: "GSH", order: 11, platformIds: ["N": "64774", "S": "64775"]),
-        Station(id: "64776", lineId: "Green", name: "Civic Center", shortName: "CVC", order: 12, platformIds: ["N": "64776", "S": "64777"]),
-        Station(id: "64778", lineId: "Green", name: "Japantown/Ayer", shortName: "JPN", order: 13, platformIds: ["N": "64778", "S": "64779"]),
-        Station(id: "64780", lineId: "Green", name: "St. James", shortName: "STJ", order: 14, platformIds: ["N": "64780", "S": "64781"]),
-        Station(id: "64782", lineId: "Green", name: "Santa Clara", shortName: "STC", order: 15, platformIds: ["N": "64782", "S": "64783"]),
-        Station(id: "64784", lineId: "Green", name: "Paseo de San Antonio", shortName: "PSA", order: 16, platformIds: ["N": "64784", "S": "64785"]),
-        Station(id: "64824", lineId: "Green", name: "Convention Center", shortName: "CNV", order: 17, platformIds: ["N": "64824", "S": "64825"]),
-        Station(id: "64822", lineId: "Green", name: "San Fernando", shortName: "SFN", order: 18, platformIds: ["N": "64822", "S": "64823"]),
-        Station(id: "64826", lineId: "Green", name: "San Jose Diridon", shortName: "SJD", order: 19, platformIds: ["N": "64826", "S": "64827"]),
-        Station(id: "64850", lineId: "Green", name: "Race", shortName: "RCE", order: 20, platformIds: ["N": "64850", "S": "64851"]),
-        Station(id: "64852", lineId: "Green", name: "Fruitdale", shortName: "FRD", order: 21, platformIds: ["N": "64852", "S": "64853"]),
-        Station(id: "64854", lineId: "Green", name: "Bascom", shortName: "BSC", order: 22, platformIds: ["N": "64854", "S": "64855"]),
-        Station(id: "64856", lineId: "Green", name: "Hamilton", shortName: "HML", order: 23, platformIds: ["N": "64856", "S": "64857"]),
-        Station(id: "64858", lineId: "Green", name: "Downtown Campbell", shortName: "DTC", order: 24, platformIds: ["N": "64858", "S": "64859"]),
-        Station(id: "64860", lineId: "Green", name: "Winchester", shortName: "WNC", order: 25, platformIds: ["N": "64860", "S": "64861"])
+        // Old Ironsides through Champion - shared with Orange Line (E/W directions)
+        Station(id: "64797", lineId: "Green", name: "Old Ironsides", shortName: "OIS", order: 0, platformIds: ["N": "64810", "S": "64797"]),
+        Station(id: "64798", lineId: "Green", name: "Great America", shortName: "GAM", order: 1, platformIds: ["N": "64809", "S": "64798"]),
+        Station(id: "64799", lineId: "Green", name: "Lick Mill", shortName: "LML", order: 2, platformIds: ["N": "64808", "S": "64799"]),
+        Station(id: "64800", lineId: "Green", name: "Champion", shortName: "CHP", order: 3, platformIds: ["N": "64807", "S": "64800"]),
+        // Tasman branch - shared with Blue Line (N/S directions)
+        Station(id: "64759", lineId: "Green", name: "Tasman", shortName: "TSM", order: 4, platformIds: ["N": "64759", "S": "64762"]),
+        Station(id: "64758", lineId: "Green", name: "River Oaks", shortName: "ROK", order: 5, platformIds: ["N": "64758", "S": "64763"]),
+        Station(id: "64757", lineId: "Green", name: "Orchard", shortName: "ORC", order: 6, platformIds: ["N": "64757", "S": "64764"]),
+        Station(id: "64756", lineId: "Green", name: "Bonaventura", shortName: "BNV", order: 7, platformIds: ["N": "64756", "S": "64765"]),
+        Station(id: "64755", lineId: "Green", name: "Component", shortName: "CMP", order: 8, platformIds: ["N": "64755", "S": "64766"]),
+        Station(id: "64754", lineId: "Green", name: "Karina", shortName: "KRN", order: 9, platformIds: ["N": "64754", "S": "64767"]),
+        Station(id: "64753", lineId: "Green", name: "Metro/Airport", shortName: "APT", order: 10, platformIds: ["N": "64753", "S": "64768"]),
+        Station(id: "64752", lineId: "Green", name: "Gish", shortName: "GSH", order: 11, platformIds: ["N": "64752", "S": "64769"]),
+        Station(id: "64751", lineId: "Green", name: "Civic Center", shortName: "CVC", order: 12, platformIds: ["N": "64751", "S": "64770"]),
+        Station(id: "64750", lineId: "Green", name: "Japantown/Ayer", shortName: "JPN", order: 13, platformIds: ["N": "64750", "S": "64771"]),
+        Station(id: "64749", lineId: "Green", name: "St. James", shortName: "STJ", order: 14, platformIds: ["N": "64749", "S": "64772"]),
+        Station(id: "64748", lineId: "Green", name: "Santa Clara", shortName: "STC", order: 15, platformIds: ["N": "64748", "S": "64773"]),
+        Station(id: "64747", lineId: "Green", name: "San Antonio", shortName: "SAN", order: 16, platformIds: ["N": "64747", "S": "64774"]),
+        Station(id: "64746", lineId: "Green", name: "Convention Center", shortName: "CNV", order: 17, platformIds: ["N": "64746", "S": "64775"]),
+        // Winchester branch - dedicated stop_ids (65374-65389)
+        Station(id: "65388", lineId: "Green", name: "San Fernando", shortName: "SFN", order: 18, platformIds: ["N": "65388", "S": "65389"]),
+        Station(id: "65374", lineId: "Green", name: "San Jose Diridon", shortName: "SJD", order: 19, platformIds: ["N": "65374", "S": "65381"]),
+        Station(id: "65375", lineId: "Green", name: "Race", shortName: "RCE", order: 20, platformIds: ["N": "65375", "S": "65382"]),
+        Station(id: "65376", lineId: "Green", name: "Fruitdale", shortName: "FRD", order: 21, platformIds: ["N": "65376", "S": "65383"]),
+        Station(id: "65377", lineId: "Green", name: "Bascom", shortName: "BSC", order: 22, platformIds: ["N": "65377", "S": "65384"]),
+        Station(id: "65378", lineId: "Green", name: "Hamilton", shortName: "HML", order: 23, platformIds: ["N": "65378", "S": "65385"]),
+        Station(id: "65379", lineId: "Green", name: "Campbell", shortName: "CMB", order: 24, platformIds: ["N": "65379", "S": "65386"]),
+        Station(id: "65380", lineId: "Green", name: "Winchester", shortName: "WNC", order: 25, platformIds: ["N": "65380", "S": "65387"])
     ]
     
     /// Total number of stations on the Green Line

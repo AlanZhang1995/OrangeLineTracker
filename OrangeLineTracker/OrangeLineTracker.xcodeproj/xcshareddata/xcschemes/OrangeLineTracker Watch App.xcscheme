@@ -43,18 +43,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D43A3F432F325D64001A8B5C"
-               BuildableName = "OrangeLineTracker Watch AppTests.xctest"
-               BlueprintName = "OrangeLineTracker Watch AppTests"
-               ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

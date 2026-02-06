@@ -329,10 +329,14 @@ class VTAService: VTAServiceProtocol {
     // MARK: - Private Methods
     
     /// Builds the API URL for the StopMonitoring request
+    /// Uses round-robin API key rotation from APIConfig
     private func buildURL(stationId: String) -> URL? {
+        // Get the next API key from round-robin rotation
+        let currentKey = APIConfig.vtaAPIKey
+        
         var components = URLComponents(string: Self.baseURL)
         components?.queryItems = [
-            URLQueryItem(name: "api_key", value: apiKey),
+            URLQueryItem(name: "api_key", value: currentKey),
             URLQueryItem(name: "agency", value: Self.agencyId),
             URLQueryItem(name: "stopCode", value: stationId),
             URLQueryItem(name: "format", value: "json")

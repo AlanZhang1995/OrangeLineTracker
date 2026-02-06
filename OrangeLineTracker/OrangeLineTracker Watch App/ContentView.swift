@@ -245,29 +245,36 @@ struct ArrivalView: View {
     private func scheduleMinuteTimer() {
         // Invalidate existing timer
         minuteTimer?.invalidate()
+        minuteTimer = nil
         
         // Calculate seconds until next minute mark
         let now = Date()
         let calendar = Calendar.current
         let seconds = calendar.component(.second, from: now)
-        let secondsUntilNextMinute = 60 - seconds
+        let nanoseconds = calendar.component(.nanosecond, from: now)
         
-        // Schedule timer to fire at next minute mark
-        let initialTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(secondsUntilNextMinute), repeats: false) { _ in
-            // Update current time and refresh
+        // Calculate precise time until next minute mark (add small buffer to ensure we're past :00)
+        let secondsUntilNextMinute = Double(60 - seconds) - Double(nanoseconds) / 1_000_000_000.0 + 0.1
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        print("ArrivalView: ⏰ Scheduling timer to fire in \(String(format: "%.1f", secondsUntilNextMinute))s (current: \(formatter.string(from: now)))")
+        
+        // Schedule repeating timer that fires every 60 seconds starting at next minute mark
+        let timer = Timer(timeInterval: secondsUntilNextMinute, repeats: false) { _ in
+            // This closure captures self, but since ArrivalView is a struct and
+            // the timer is invalidated in onDisappear, this is safe
             self.onMinuteMark()
             
-            // Schedule repeating timer for subsequent minutes
-            let repeatingTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
-                self.onMinuteMark()
+            // Reschedule for next minute
+            DispatchQueue.main.async {
+                self.scheduleMinuteTimer()
             }
-            // Add repeating timer to .common mode to ensure it fires during scrolling
-            RunLoop.main.add(repeatingTimer, forMode: .common)
-            self.minuteTimer = repeatingTimer
         }
-        // Add initial timer to .common mode to ensure it fires during scrolling
-        RunLoop.main.add(initialTimer, forMode: .common)
-        minuteTimer = initialTimer
+        
+        // Add timer to .common mode to ensure it fires during scrolling
+        RunLoop.main.add(timer, forMode: .common)
+        minuteTimer = timer
     }
     
     /// Called at each minute mark (:00 seconds)

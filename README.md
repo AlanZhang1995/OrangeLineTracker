@@ -33,6 +33,12 @@ Apple Watch 应用，实时追踪 VTA 轻轨到站时间。支持 Orange、Blue�
 - **Widget 同步** - Widget 语言与 App 保持一致
 - **默认中文** - 首次安装默认使用中文
 
+### 🔑 API Key 配置
+- **自定义 API Key** - 用户可配置自己的 511.org API key
+- **避免限流** - 使用自己的 key 避免共享 key 被限流
+- **免费获取** - 在 511.org 免费申请，每个 key 60次/小时
+- **自动验证** - 输入时自动验证 key 格式
+
 ### 🔄 智能刷新策略
 基于 15 分钟一班车的频率优化：
 | 到站时间 | 刷新间隔 |
@@ -102,6 +108,14 @@ open OrangeLineTracker/OrangeLineTracker.xcodeproj
 2. 启用时间规则
 3. 添加规则，设置触发时间、线路、站点、方向
 4. 规则会在指定时间自动生效
+
+### 配置 API Key（推荐）
+1. 访问 [511.org/open-data/token](https://511.org/open-data/token)
+2. 创建免费账户并生成 API token
+3. 打开 App → 设置 → API 密钥设置
+4. 粘贴你的 API key 并保存
+
+> 💡 配置自己的 API key 可以避免与其他用户共享限额导致的限流问题
 
 ## 🗺 支持的线路
 

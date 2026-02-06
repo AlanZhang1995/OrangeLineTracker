@@ -1,0 +1,57 @@
+VTA Transit Tracker - Real-time Light Rail Arrivals for Apple Watch
+
+Never miss your train again! VTA Transit Tracker brings real-time arrival information for Santa Clara Valley Transportation Authority (VTA) Light Rail directly to your wrist.
+
+FEATURES
+
+• Real-Time Arrivals
+Get accurate arrival predictions for all VTA Light Rail stations. See exactly how many minutes until your next train arrives.
+
+• All Three Lines Supported
+- Orange Line: Mountain View ↔ Alum Rock
+- Blue Line: Baypointe ↔ Santa Teresa
+- Green Line: Old Ironsides ↔ Winchester
+
+• Smart Time Rules
+Automation designed for commuters. Set up multiple time-based rules to automatically switch stations and directions:
+- 7:30 AM: Auto-show your work-bound station and direction
+- 5:30 PM: Auto-switch to your homebound station and direction
+- Enable/disable rules anytime
+No more manual switching - just raise your wrist to see what you need.
+
+• Watch Face Widget
+Add a complication to your watch face for instant access to arrival times. Supports Circular, Rectangular, Inline, and Corner styles.
+Rectangular shows station name and direction; Circular shows countdown only. Recommend using Rectangular first to verify time rules work correctly, then switch to Circular.
+
+• Bilingual Support
+Full English and Chinese language support. Switch languages anytime in settings.
+
+• Smart Refresh
+Intelligent refresh intervals based on train proximity - more frequent updates when your train is close.
+(Note: watchOS limits background refresh to ~15 min intervals, so widget data is approximate. If you need precise timing, open the app to confirm.)
+
+• Custom API Key
+Use your own free 511.org API key to avoid rate limiting.
+
+PERFECT FOR
+
+• Daily commuters on VTA Light Rail
+• Visitors exploring Silicon Valley
+• Anyone who wants quick access to train times
+
+DATA SOURCE
+
+Real-time data provided by 511.org SIRI API, the official source for Bay Area transit information.
+
+PRIVACY
+
+This app does not collect any personal data. All preferences are stored locally on your device.
+
+ABOUT DEVELOPMENT
+
+This app is a product of Vibe Coding — built entirely with AI-assisted programming. From requirements to implementation, the entire development was a human-AI collaboration. The developer has zero Swift experience.
+
+---
+
+Open source at https://github.com/AlanZhang1995/OrangeLineTracker
+Questions or feedback? Visit our GitHub page or submit an issue. [I'll try to get AI to fix it]

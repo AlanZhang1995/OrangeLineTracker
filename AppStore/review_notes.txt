@@ -1,0 +1,59 @@
+# App Review Notes / 审核备注
+
+## For App Store Review Team
+
+### App Overview
+VTA Transit Tracker is a watchOS-only app that displays real-time arrival times for VTA (Santa Clara Valley Transportation Authority) Light Rail trains in the San Francisco Bay Area.
+
+### How to Test
+
+1. **Select a Station**
+   - Open the app
+   - Go to the "Select" tab
+   - Choose a line (Orange, Blue, or Green)
+   - Choose a station
+   - Select a direction
+
+2. **View Arrival Times**
+   - Return to the "Arrivals" tab
+   - Real-time arrival predictions will display
+   - Pull down to refresh
+
+3. **Test Widget**
+   - Long press watch face → Edit
+   - Add "VTA Transit" complication
+   - Widget shows countdown to next train
+
+4. **Test Time Rules** (Optional)
+   - Go to Settings → Enable Auto Switch
+   - Configure Rules → Add Rule
+   - Set a time, line, station, and direction
+   - The app will auto-switch when the rule triggers
+
+### API Information
+- Data source: 511.org SIRI StopMonitoring API
+- This is a public API for Bay Area transit data
+- The app includes backup API keys for reliability
+- Users can optionally configure their own free API key
+
+### Service Hours
+VTA Light Rail typically operates 7am-8pm. Outside these hours, the API may return no arrival data, which is expected behavior.
+
+### Terminus Stations
+Some stations are terminus (end of line) stations. For these stations, one direction will show no arrivals because trains depart from there rather than arrive.
+
+### No Account Required
+- No login or account creation needed
+- No personal data collected
+- All settings stored locally on device
+
+### Network Requirements
+- Requires internet connection to fetch real-time data
+- Works on WiFi or cellular (via iPhone)
+
+### Demo Video
+If needed, a demo video can be provided showing the app in action.
+
+### Contact
+For any questions during review:
+GitHub: https://github.com/AlanZhang1995/OrangeLineTracker/issues

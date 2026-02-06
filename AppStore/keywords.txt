@@ -1,0 +1,18 @@
+# App Store 关键词 / Keywords
+# 限制: 100 字符，用逗号分隔
+# Limit: 100 characters, comma separated
+
+## 英文关键词 (English Keywords)
+VTA,transit,light rail,train,arrival,commute,Silicon Valley,San Jose,watch,widget
+
+## 中文关键词 (Chinese Keywords)  
+轻轨,地铁,公交,到站,通勤,硅谷,圣何塞,列车,时刻表,交通
+
+## 备选关键词 (Alternative Keywords)
+# 如果主关键词超过100字符，可以从这里选择替换
+
+### English alternatives:
+# metro, subway, schedule, tracker, real-time, Bay Area, Mountain View, Santa Clara
+
+### Chinese alternatives:
+# 实时,追踪,湾区,山景城,圣克拉拉,出行,换乘

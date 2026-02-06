@@ -268,13 +268,13 @@ class LanguageService: ObservableObject {
     private init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
         
-        // Load saved language or default to Chinese
+        // Load saved language or default to English
         if let savedLanguage = userDefaults.string(forKey: languageKey),
            let language = AppLanguage(rawValue: savedLanguage) {
             self.currentLanguage = language
         } else {
-            // Default to Chinese
-            self.currentLanguage = .chinese
+            // Default to English
+            self.currentLanguage = .english
         }
         
         // Sync to shared defaults on init

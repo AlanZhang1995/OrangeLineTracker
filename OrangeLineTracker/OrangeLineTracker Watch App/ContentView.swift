@@ -754,6 +754,10 @@ struct StationRowView: View {
 struct SettingsView: View {
     @ObservedObject var metroViewModel: MetroViewModel
     @ObservedObject var timeRuleViewModel: TimeRuleViewModel
+    @ObservedObject private var languageService = LanguageService.shared
+    
+    /// State for navigating to API key settings
+    @State private var showingAPIKeySettings = false
     
     /// The color for the current line (parsed from hex)
     /// Falls back to orange if no line selected or parsing fails
@@ -778,6 +782,9 @@ struct SettingsView: View {
                 apiKeySection
             }
             .navigationTitle(L10n.settings)
+            .navigationDestination(isPresented: $showingAPIKeySettings) {
+                APIKeySettingsView()
+            }
         }
     }
     
@@ -943,8 +950,6 @@ struct SettingsView: View {
     // MARK: - Language Section
     
     /// Section for language settings
-    @ObservedObject private var languageService = LanguageService.shared
-    
     private var languageSection: some View {
         Section {
             Picker(L10n.language, selection: Binding(
@@ -966,25 +971,16 @@ struct SettingsView: View {
     // MARK: - API Key Section
     
     /// Section for API key configuration
-    /// Allows users to enter their own 511.org API key to avoid rate limiting
     private var apiKeySection: some View {
         Section {
-            NavigationLink {
-                APIKeySettingsView()
+            Button {
+                showingAPIKeySettings = true
             } label: {
-                HStack(spacing: 8) {
+                HStack {
                     Image(systemName: "key.fill")
                         .foregroundColor(lineColor)
-                        .font(.body)
                     
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L10n.apiKey)
-                            .font(.body)
-                        
-                        Text(APIConfig.hasUserAPIKey ? L10n.apiKeyConfigured : L10n.apiKeyNotConfigured)
-                            .font(.caption2)
-                            .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
-                    }
+                    Text(L10n.apiKey)
                     
                     Spacer()
                     
@@ -992,14 +988,20 @@ struct SettingsView: View {
                     Image(systemName: APIConfig.hasUserAPIKey ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
                         .font(.caption)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
+            .buttonStyle(PlainButtonStyle())
         } header: {
             Label(L10n.apiKeySettings, systemImage: "key")
                 .foregroundColor(lineColor)
         } footer: {
-            Text(L10n.apiKeyFooter)
+            Text(APIConfig.hasUserAPIKey ? L10n.apiKeyConfigured : L10n.apiKeyNotConfigured)
                 .font(.caption2)
+                .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
         }
     }
     
@@ -1981,9 +1983,7 @@ struct StationSelectionViewInline: View {
 // MARK: - APIKeySettingsView
 
 /// View for configuring the user's 511.org API key
-/// Allows users to enter their own API key to avoid rate limiting on shared keys
 struct APIKeySettingsView: View {
-    @ObservedObject private var languageService = LanguageService.shared
     
     /// The API key input text
     @State private var apiKeyInput: String = ""
@@ -2040,19 +2040,11 @@ struct APIKeySettingsView: View {
                     .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
                     .font(.title2)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(APIConfig.hasUserAPIKey ? L10n.apiKeyConfigured : L10n.apiKeyNotConfigured)
-                        .font(.body)
-                        .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
-                    
-                    if !APIConfig.hasUserAPIKey {
-                        Text(LanguageService.shared.isEnglish
-                             ? "Shared keys may be rate limited"
-                             : "共享密钥可能被限流")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                Text(APIConfig.hasUserAPIKey 
+                     ? L10n.apiKeyConfigured 
+                     : (LanguageService.shared.isEnglish ? "Using shared key" : "使用共享密钥"))
+                    .font(.body)
+                    .foregroundColor(APIConfig.hasUserAPIKey ? .green : .orange)
             }
             .padding(.vertical, 4)
         }
@@ -2144,6 +2136,7 @@ struct APIKeySettingsView: View {
                 }
                 .font(.caption2)
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.vertical, 4)
         } header: {

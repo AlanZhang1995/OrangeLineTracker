@@ -216,7 +216,7 @@ struct ArrivalView: View {
         .refreshable {
             await viewModel.refreshPredictions()
         }
-        .navigationTitle("到站时间")
+        .navigationTitle(L10n.arrivalTime)
         .onAppear {
             // Reset current time when view appears
             currentTime = Date()
@@ -336,7 +336,7 @@ struct ArrivalView: View {
                     .font(.title2)
                     .foregroundColor(lineColor.opacity(0.6))
                 
-                Text("请选择站点")
+                Text(L10n.pleaseSelectStation)
                     .font(.headline)
                     .foregroundColor(.secondary)
             }
@@ -384,7 +384,7 @@ struct ArrivalView: View {
                 .scaleEffect(1.5)
                 .tint(lineColor)
             
-            Text("加载中...")
+            Text(L10n.loading)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -426,7 +426,7 @@ struct ArrivalView: View {
                 .background(Color.secondary.opacity(0.3))
                 .padding(.vertical, 4)
             
-            Text("后续列车")
+            Text(L10n.nextTrains)
                 .font(.caption2)
                 .foregroundColor(.secondary)
             
@@ -475,11 +475,11 @@ struct ArrivalView: View {
                 .font(.system(size: 36))
                 .foregroundColor(.secondary.opacity(0.6))
             
-            Text("暂无列车信息")
+            Text(L10n.noTrainInfo)
                 .font(.body)
                 .foregroundColor(.secondary)
             
-            Text("请稍后刷新或检查运营时间")
+            Text(L10n.checkSchedule)
                 .font(.caption2)
                 .foregroundColor(.secondary.opacity(0.8))
                 .multilineTextAlignment(.center)
@@ -494,7 +494,7 @@ struct ArrivalView: View {
         HStack(spacing: 4) {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.caption2)
-            Text("显示缓存数据")
+            Text(L10n.showingCachedData)
                 .font(.caption2)
         }
         .foregroundColor(lineColor.opacity(0.8))
@@ -518,7 +518,7 @@ struct ArrivalView: View {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.clockwise")
                     .font(.caption)
-                Text("刷新")
+                Text(L10n.refresh)
                     .font(.caption)
             }
         }
@@ -560,7 +560,7 @@ struct StationPickerView: View {
                         .font(.title2)
                         .foregroundColor(lineColor)
                     
-                    Text("选择线路和站点")
+                    Text(L10n.selectLineAndStation)
                         .font(.headline)
                         .foregroundColor(.primary)
                 }
@@ -579,7 +579,7 @@ struct StationPickerView: View {
             }
             .padding()
         }
-        .navigationTitle("选择")
+        .navigationTitle(L10n.selectStation)
         .task {
             // Load lines when view appears
             if viewModel.allLines.isEmpty {
@@ -593,11 +593,11 @@ struct StationPickerView: View {
     /// Dropdown picker for selecting a line
     private var linePicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("线路")
+            Text(L10n.line)
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Picker("线路", selection: Binding(
+            Picker(L10n.line, selection: Binding(
                 get: { viewModel.selectedLine?.id ?? "" },
                 set: { newId in
                     if let line = allLines.first(where: { $0.id == newId }) {
@@ -605,7 +605,7 @@ struct StationPickerView: View {
                     }
                 }
             )) {
-                Text("请选择线路")
+                Text(L10n.pleaseSelectLine)
                     .tag("")
                 
                 ForEach(allLines) { line in
@@ -629,18 +629,18 @@ struct StationPickerView: View {
     private var stationPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("站点")
+                Text(L10n.station)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
                 Spacer()
                 
-                Text("\(stations.count) 站")
+                Text(L10n.stationCount(stations.count))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
             
-            Picker("站点", selection: Binding(
+            Picker(L10n.station, selection: Binding(
                 get: { viewModel.selectedStation?.id ?? stations.first?.id ?? "" },
                 set: { newId in
                     if let station = stations.first(where: { $0.id == newId }) {
@@ -768,8 +768,11 @@ struct SettingsView: View {
                 
                 // Background refresh settings
                 backgroundRefreshSection
+                
+                // Language settings
+                languageSection
             }
-            .navigationTitle("设置")
+            .navigationTitle(L10n.settings)
         }
     }
     
@@ -791,10 +794,10 @@ struct SettingsView: View {
                         .font(.body)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("自动切换")
+                        Text(L10n.autoSwitch)
                             .font(.body)
                         
-                        Text("根据时间自动切换站点和方向")
+                        Text(L10n.autoSwitchDesc)
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -813,12 +816,12 @@ struct SettingsView: View {
                             .foregroundColor(lineColor)
                             .font(.body)
                         
-                        Text("配置规则")
+                        Text(L10n.configureRules)
                         
                         Spacer()
                         
                         // Show enabled rule count badge
-                        Text("\(timeRuleViewModel.enabledRuleCount) 条")
+                        Text(L10n.ruleCount(timeRuleViewModel.enabledRuleCount))
                             .font(.caption)
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
@@ -836,14 +839,16 @@ struct SettingsView: View {
                 }
             }
         } header: {
-            Label("时间规则", systemImage: "clock.fill")
+            Label(L10n.timeRules, systemImage: "clock.fill")
                 .foregroundColor(lineColor)
         } footer: {
             if timeRuleViewModel.isTimeRuleEnabled {
                 Text(timeRuleViewModel.configurationSummary)
                     .font(.caption2)
             } else {
-                Text("启用后可根据时间自动切换通勤设置")
+                Text(LanguageService.shared.isEnglish
+                     ? "Enable to auto-switch commute settings by time"
+                     : "启用后可根据时间自动切换通勤设置")
                     .font(.caption2)
             }
         }
@@ -861,7 +866,7 @@ struct SettingsView: View {
                         .font(.caption)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("当前生效")
+                        Text(L10n.activeRule)
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         
@@ -907,12 +912,12 @@ struct SettingsView: View {
                         .font(.body)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("智能刷新")
+                        Text(L10n.smartRefresh)
                             .font(.body)
                         
                         Text(metroViewModel.storageService.isSmartRefreshEnabled
-                             ? "根据到站时间调整刷新频率"
-                             : "使用随机间隔 (15-60分钟)")
+                             ? L10n.smartRefreshDesc
+                             : (LanguageService.shared.isEnglish ? "Random interval (15-60 min)" : "使用随机间隔 (15-60分钟)"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -920,11 +925,36 @@ struct SettingsView: View {
             }
             .tint(lineColor)
         } header: {
-            Label("后台刷新", systemImage: "arrow.clockwise")
+            Label(L10n.backgroundRefresh, systemImage: "arrow.clockwise")
                 .foregroundColor(lineColor)
         } footer: {
-            Text("智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔")
+            Text(LanguageService.shared.isEnglish
+                 ? "Smart refresh adjusts frequency based on train arrival time"
+                 : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔")
                 .font(.caption2)
+        }
+    }
+    
+    // MARK: - Language Section
+    
+    /// Section for language settings
+    @ObservedObject private var languageService = LanguageService.shared
+    
+    private var languageSection: some View {
+        Section {
+            Picker(L10n.language, selection: Binding(
+                get: { languageService.currentLanguage },
+                set: { languageService.setLanguage($0) }
+            )) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .pickerStyle(.navigationLink)
+            .tint(lineColor)
+        } header: {
+            Label(L10n.language, systemImage: "globe")
+                .foregroundColor(lineColor)
         }
     }
     
@@ -956,7 +986,7 @@ struct TimeRuleConfigView: View {
             // Add rule button section
             addRuleSection
         }
-        .navigationTitle("时间规则")
+        .navigationTitle(L10n.timeRules)
         .sheet(isPresented: $showingAddRule) {
             // Add new rule sheet
             TimeRuleEditView(
@@ -997,11 +1027,11 @@ struct TimeRuleConfigView: View {
                     .font(.system(size: 36))
                     .foregroundColor(.orange.opacity(0.6))
                 
-                Text("暂无时间规则")
+                Text(L10n.noTimeRules)
                     .font(.body)
                     .foregroundColor(.secondary)
                 
-                Text("添加规则以自动切换通勤设置")
+                Text(L10n.addRuleHint)
                     .font(.caption2)
                     .foregroundColor(.secondary.opacity(0.8))
                     .multilineTextAlignment(.center)
@@ -1041,14 +1071,14 @@ struct TimeRuleConfigView: View {
             }
         } header: {
             HStack {
-                Text("已配置规则")
+                Text(L10n.configuredRules)
                 Spacer()
-                Text("\(viewModel.ruleCount) 条")
+                Text(L10n.ruleCount(viewModel.ruleCount))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
         } footer: {
-            Text("向左滑动删除规则，点击编辑")
+            Text(L10n.swipeToDelete)
                 .font(.caption2)
         }
     }
@@ -1067,7 +1097,7 @@ struct TimeRuleConfigView: View {
                         .foregroundColor(.orange)
                         .font(.title3)
                     
-                    Text("添加规则")
+                    Text(L10n.addRule)
                         .foregroundColor(.orange)
                     
                     Spacer()
@@ -1178,8 +1208,8 @@ struct TimeRuleRowView: View {
                 ? lineColor.opacity(0.1)
                 : Color.clear
         )
-        .accessibilityLabel("\(rule.name), \(rule.isEnabled ? "已启用" : "已禁用"), \(rule.triggerTimeDisplay), \(lineName)")
-        .accessibilityHint("双击编辑规则")
+        .accessibilityLabel("\(rule.name), \(rule.isEnabled ? L10n.enabledStatus : L10n.disabledStatus), \(rule.triggerTimeDisplay), \(lineName)")
+        .accessibilityHint(L10n.doubleTapToEdit)
     }
     
     // MARK: - Static Helper Functions
@@ -1341,9 +1371,9 @@ struct TimeRuleEditView: View {
     private var title: String {
         switch mode {
         case .add:
-            return "添加规则"
+            return L10n.addRule
         case .edit:
-            return "编辑规则"
+            return L10n.editRule
         }
     }
     
@@ -1454,11 +1484,11 @@ struct TimeRuleEditView: View {
     /// Section for entering rule name
     private var nameSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("规则名称", systemImage: "tag")
+            Label(L10n.ruleName, systemImage: "tag")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            TextField("例如：早班通勤", text: $name)
+            TextField(L10n.ruleNamePlaceholder, text: $name)
                 .textFieldStyle(.plain)
                 .padding(10)
                 .background(
@@ -1474,13 +1504,13 @@ struct TimeRuleEditView: View {
     /// - Validates: Requirement 8.2 (save trigger time)
     private var timePickerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("触发时间", systemImage: "clock")
+            Label(L10n.triggerTime, systemImage: "clock")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
             // Time picker showing only hour and minute
             DatePicker(
-                "时间",
+                L10n.triggerTime,
                 selection: $triggerTime,
                 displayedComponents: .hourAndMinute
             )
@@ -1496,12 +1526,12 @@ struct TimeRuleEditView: View {
     /// - Validates: Requirement 8.2 (save target line)
     private var linePickerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("目标线路", systemImage: "tram.circle.fill")
+            Label(L10n.targetLine, systemImage: "tram.circle.fill")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
             // Line picker with color indicators
-            Picker("线路", selection: $selectedLineId) {
+            Picker(L10n.line, selection: $selectedLineId) {
                 ForEach(availableLines, id: \.id) { line in
                     HStack(spacing: 6) {
                         Circle()
@@ -1524,7 +1554,7 @@ struct TimeRuleEditView: View {
     /// - Validates: Requirement 8.2 (save target station)
     private var stationPickerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("目标站点", systemImage: "tram.fill")
+            Label(L10n.targetStation, systemImage: "tram.fill")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
@@ -1544,7 +1574,7 @@ struct TimeRuleEditView: View {
                                 .foregroundColor(.secondary)
                         }
                     } else {
-                        Text("选择站点")
+                        Text(L10n.selectStation)
                             .foregroundColor(.secondary)
                     }
                     
@@ -1571,7 +1601,7 @@ struct TimeRuleEditView: View {
     /// - Validates: Requirement 8.2 (save target direction)
     private var directionPickerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("目标方向", systemImage: "arrow.left.arrow.right")
+            Label(L10n.targetDirection, systemImage: "arrow.left.arrow.right")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
@@ -1595,7 +1625,7 @@ struct TimeRuleEditView: View {
                 Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(isEnabled ? .green : .secondary)
                 
-                Text("启用规则")
+                Text(L10n.enableRule)
             }
         }
         .tint(.green)
@@ -1613,14 +1643,14 @@ struct TimeRuleEditView: View {
         HStack(spacing: 12) {
             // Cancel button
             Button(action: onCancel) {
-                Text("取消")
+                Text(L10n.cancel)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             
             // Save button
             Button(action: saveRule) {
-                Text("保存")
+                Text(L10n.save)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -1674,13 +1704,13 @@ struct TimeRuleEditView: View {
         // Validate name
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
-            validationError = "请输入规则名称"
+            validationError = L10n.pleaseEnterRuleName
             return
         }
         
         // Validate station
         guard isValidStationId(selectedStationId, for: selectedLineId) else {
-            validationError = "请选择有效的站点"
+            validationError = L10n.pleaseSelectValidStation
             return
         }
         
@@ -1897,7 +1927,7 @@ struct StationSelectionViewInline: View {
             }
         }
         .listStyle(.carousel)
-        .navigationTitle("选择站点")
+        .navigationTitle(L10n.selectStation)
     }
 }
 

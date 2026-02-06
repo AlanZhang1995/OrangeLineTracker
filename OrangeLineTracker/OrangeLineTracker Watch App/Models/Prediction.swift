@@ -123,19 +123,19 @@ struct Prediction: Identifiable, Codable, Equatable {
     func arrivalTimeDisplay(at currentTime: Date = Date()) -> String {
         switch arrivalStatus {
         case .arriving:
-            return ArrivalStatus.arriving.displayText
+            return LanguageService.shared.isEnglish ? ArrivalStatus.arriving.displayTextEnglish : ArrivalStatus.arriving.displayText
         case .boarding:
-            return ArrivalStatus.boarding.displayText
+            return LanguageService.shared.isEnglish ? ArrivalStatus.boarding.displayTextEnglish : ArrivalStatus.boarding.displayText
         case .scheduled, .delayed:
             if let minutes = currentMinutesUntilArrival(at: currentTime) {
                 // Subtract 1 minute to encourage users to leave early (better early than late)
                 let displayMinutes = max(0, minutes - 1)
                 if displayMinutes <= 0 {
-                    return ArrivalStatus.arriving.displayText
+                    return LanguageService.shared.isEnglish ? ArrivalStatus.arriving.displayTextEnglish : ArrivalStatus.arriving.displayText
                 }
-                return "\(displayMinutes) 分钟"
+                return LanguageService.shared.isEnglish ? "\(displayMinutes) min" : "\(displayMinutes) 分钟"
             }
-            return arrivalStatus.displayText
+            return LanguageService.shared.isEnglish ? arrivalStatus.displayTextEnglish : arrivalStatus.displayText
         }
     }
     

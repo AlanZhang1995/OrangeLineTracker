@@ -101,13 +101,13 @@ struct DirectionPickerView: View {
     private var segmentedPickerView: some View {
         VStack(spacing: 8) {
             // Direction label
-            Text("方向")
+            Text(L10n.direction)
                 .font(.caption2)
                 .foregroundColor(.secondary)
             
             // Wheel picker (watchOS compatible)
             // Validates: Requirement 5.1 - display direction options
-            Picker("方向", selection: $selectedDirectionId) {
+            Picker(L10n.direction, selection: $selectedDirectionId) {
                 ForEach(effectiveDirections, id: \.id) { direction in
                     HStack(spacing: 4) {
                         Image(systemName: direction.iconName)
@@ -132,7 +132,7 @@ struct DirectionPickerView: View {
     private var buttonsPickerView: some View {
         VStack(spacing: 8) {
             // Direction label
-            Text("选择方向")
+            Text(L10n.selectDirection)
                 .font(.caption2)
                 .foregroundColor(.secondary)
             
@@ -283,8 +283,8 @@ struct LineDirectionButton: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(direction.headsign), \(isSelected ? "已选择" : "未选择")")
-        .accessibilityHint(isSelected ? "当前选中的方向" : "双击选择此方向")
+        .accessibilityLabel("\(direction.headsign), \(isSelected ? L10n.selected : L10n.notSelected)")
+        .accessibilityHint(isSelected ? L10n.currentlySelected : L10n.doubleTapToSelect)
     }
 }
 

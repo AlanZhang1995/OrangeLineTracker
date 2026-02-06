@@ -30,6 +30,37 @@ private enum WidgetStorageKeys {
     static let lineId = "widget_lineId"
     static let lineName = "widget_lineName"
     static let lineColor = "widget_lineColor"  // Hex color string
+    
+    // Language preference (shared with main app)
+    static let appLanguage = "appLanguage"
+}
+
+// MARK: - Widget Localization Helper
+
+/// Helper for widget localization using shared UserDefaults
+private struct WidgetL10n {
+    private static var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: appGroupIdentifier)
+    }
+    
+    static var isEnglish: Bool {
+        let language = sharedDefaults?.string(forKey: WidgetStorageKeys.appLanguage) ?? "zh"
+        return language == "en"
+    }
+    
+    static var widgetOld: String { isEnglish ? "Old" : "旧" }
+    static var widgetCached: String { isEnglish ? "Cached" : "缓存" }
+    static var widgetMin: String { "min" }
+    
+    static func directionArrow(_ dir: String) -> String {
+        switch dir {
+        case "E": return isEnglish ? "→E" : "→东"
+        case "W": return isEnglish ? "←W" : "←西"
+        case "N": return isEnglish ? "↑N" : "↑北"
+        case "S": return isEnglish ? "↓S" : "↓南"
+        default: return dir
+        }
+    }
 }
 
 // MARK: - Color Extension for Hex Support
@@ -307,7 +338,7 @@ struct CircularView: View {
                     Text("\(minutes)")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
-                    Text(entry.isStale ? "旧" : "min")
+                    Text(entry.isStale ? WidgetL10n.widgetOld : WidgetL10n.widgetMin)
                         .font(.system(size: 10))
                         .foregroundColor(entry.isStale ? .yellow : .secondary)
                 } else {
@@ -326,13 +357,7 @@ struct CircularView: View {
     
     /// Direction text based on line type
     private var directionText: String {
-        switch entry.direction {
-        case "E": return "→东"
-        case "W": return "←西"
-        case "N": return "↑北"
-        case "S": return "↓南"
-        default: return entry.direction
-        }
+        WidgetL10n.directionArrow(entry.direction)
     }
 }
 
@@ -401,7 +426,7 @@ struct RectangularView: View {
                     Text("\(minutes)")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
-                    Text(entry.isStale ? "缓存" : "min")
+                    Text(entry.isStale ? WidgetL10n.widgetCached : WidgetL10n.widgetMin)
                         .font(.caption2)
                         .foregroundColor(entry.isStale ? .yellow : .secondary)
                 }
@@ -435,7 +460,7 @@ struct InlineView: View {
     var body: some View {
         if let minutes = entry.arrivalMinutes {
             let cacheIndicator = entry.isStale ? "⏱" : ""
-            Label("\(entry.stationShortName) \(directionShort) \(minutes)min\(cacheIndicator)", systemImage: "tram.fill")
+            Label("\(entry.stationShortName) \(directionShort) \(minutes)\(WidgetL10n.widgetMin)\(cacheIndicator)", systemImage: "tram.fill")
         } else {
             Label("\(entry.stationShortName) \(directionShort)", systemImage: "tram.fill")
         }
@@ -467,7 +492,7 @@ struct CornerView: View {
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(entry.isStale ? entry.lineColor.opacity(0.6) : entry.lineColor)
                     if entry.isStale {
-                        Text("旧")
+                        Text(WidgetL10n.widgetOld)
                             .font(.system(size: 8))
                             .foregroundColor(.yellow)
                     }

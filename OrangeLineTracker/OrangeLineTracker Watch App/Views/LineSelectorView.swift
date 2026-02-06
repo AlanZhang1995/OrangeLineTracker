@@ -40,7 +40,7 @@ struct LineSelectorView: View {
             }
             .padding()
         }
-        .navigationTitle("选择线路")
+        .navigationTitle(L10n.selectLine)
         .task {
             // Load lines when view appears
             if viewModel.allLines.isEmpty {
@@ -58,12 +58,12 @@ struct LineSelectorView: View {
                 .font(.title2)
                 .foregroundColor(.orange)
             
-            Text("选择线路")
+            Text(L10n.selectLine)
                 .font(.headline)
                 .foregroundColor(.primary)
             
             if !viewModel.allLines.isEmpty {
-                Text("共 \(viewModel.allLines.count) 条线路")
+                Text(L10n.totalLines(viewModel.allLines.count))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -105,7 +105,7 @@ struct LineSelectorView: View {
                 .scaleEffect(1.5)
                 .tint(.orange)
             
-            Text("加载线路中...")
+            Text(L10n.loadingLines)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -138,7 +138,7 @@ struct LineSelectorView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.clockwise")
                         .font(.caption)
-                    Text("重试")
+                    Text(L10n.retry)
                         .font(.caption)
                 }
             }
@@ -157,11 +157,11 @@ struct LineSelectorView: View {
                 .font(.system(size: 36))
                 .foregroundColor(.secondary.opacity(0.6))
             
-            Text("暂无线路数据")
+            Text(L10n.noLineData)
                 .font(.body)
                 .foregroundColor(.secondary)
             
-            Text("请检查网络连接后重试")
+            Text(L10n.checkNetworkRetry)
                 .font(.caption2)
                 .foregroundColor(.secondary.opacity(0.8))
                 .multilineTextAlignment(.center)
@@ -175,7 +175,7 @@ struct LineSelectorView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.clockwise")
                         .font(.caption)
-                    Text("刷新")
+                    Text(L10n.refresh)
                         .font(.caption)
                 }
             }
@@ -200,7 +200,7 @@ struct LineSelectorView: View {
             let nonFavoriteLightRail = viewModel.lightRailLines.filter { !viewModel.isFavorite($0) }
             if !nonFavoriteLightRail.isEmpty {
                 lineSection(
-                    title: "轻轨",
+                    title: L10n.lightRail,
                     icon: "tram.fill",
                     lines: nonFavoriteLightRail.sorted { $0.name < $1.name }
                 )
@@ -210,7 +210,7 @@ struct LineSelectorView: View {
             let nonFavoriteBus = viewModel.busLines.filter { !viewModel.isFavorite($0) }
             if !nonFavoriteBus.isEmpty {
                 lineSection(
-                    title: "公交",
+                    title: L10n.bus,
                     icon: "bus.fill",
                     lines: nonFavoriteBus.sorted { $0.name < $1.name }
                 )
@@ -230,7 +230,7 @@ struct LineSelectorView: View {
                     .font(.caption)
                     .foregroundColor(.yellow)
                 
-                Text("收藏")
+                Text(L10n.favorites)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
@@ -338,7 +338,7 @@ struct LineRowView: View {
                         .minimumScaleFactor(0.8)
                     
                     // Line type indicator
-                    Text(line.type == .lightRail ? "轻轨" : "公交")
+                    Text(line.type == .lightRail ? L10n.lightRail : L10n.bus)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -367,8 +367,8 @@ struct LineRowView: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(line.name), \(line.type == .lightRail ? "轻轨" : "公交"), \(isSelected ? "已选择" : "未选择"), \(isFavorite ? "已收藏" : "未收藏")")
-        .accessibilityHint(isSelected ? "当前选中的线路" : "双击选择此线路")
+        .accessibilityLabel("\(line.name), \(line.type == .lightRail ? L10n.lightRail : L10n.bus), \(isSelected ? L10n.selected : L10n.notSelected), \(isFavorite ? L10n.favorited : L10n.notFavorited)")
+        .accessibilityHint(isSelected ? L10n.currentlySelected : L10n.doubleTapToSelect)
     }
     
     // MARK: - Line Color Indicator
@@ -398,8 +398,8 @@ struct LineRowView: View {
                 .foregroundColor(isFavorite ? .yellow : .secondary.opacity(0.5))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isFavorite ? "取消收藏" : "添加收藏")
-        .accessibilityHint(isFavorite ? "双击从收藏中移除" : "双击添加到收藏")
+        .accessibilityLabel(isFavorite ? L10n.removeFavorite : L10n.addToFavorites)
+        .accessibilityHint(isFavorite ? L10n.doubleTapToRemove : L10n.doubleTapToAdd)
     }
     
     // MARK: - Computed Properties

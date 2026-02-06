@@ -180,6 +180,19 @@ enum L10n {
         }
     }
     
+    // MARK: - Error Messages
+    static func errorNetworkFailed(_ message: String) -> String {
+        LanguageService.shared.isEnglish ? "Network error: \(message)" : "网络连接失败: \(message)"
+    }
+    static func errorAPI(_ code: Int, _ message: String) -> String {
+        LanguageService.shared.isEnglish ? "API error (\(code)): \(message)" : "API 错误 (\(code)): \(message)"
+    }
+    static func errorParsing(_ message: String) -> String {
+        LanguageService.shared.isEnglish ? "Data parsing error: \(message)" : "数据解析错误: \(message)"
+    }
+    static var errorInvalidAPIKey: String { LanguageService.shared.isEnglish ? "Invalid API key, please check configuration" : "API 密钥无效，请检查配置" }
+    static var errorInvalidURL: String { LanguageService.shared.isEnglish ? "Invalid request URL" : "无效的请求地址" }
+    
     // MARK: - Accessibility
     static var selected: String { LanguageService.shared.isEnglish ? "selected" : "已选择" }
     static var notSelected: String { LanguageService.shared.isEnglish ? "not selected" : "未选择" }

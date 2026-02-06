@@ -600,7 +600,7 @@ class MetroViewModel: ObservableObject {
         
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
-        return "更新于 \(formatter.string(from: lastUpdated))"
+        return L10n.updatedAt(formatter.string(from: lastUpdated))
     }
     
     /// Returns the display text for the current station

@@ -729,7 +729,7 @@ struct TimeRuleViewModelConfigurationSummaryTests {
             storageService: mockStorageService
         )
         
-        #expect(viewModel.configurationSummary == "时间规则已禁用")
+        #expect(viewModel.configurationSummary == L10n.timeRulesDisabled)
     }
     
     @Test func configurationSummaryShowsNoRulesWhenEmpty() {
@@ -744,7 +744,7 @@ struct TimeRuleViewModelConfigurationSummaryTests {
             storageService: mockStorageService
         )
         
-        #expect(viewModel.configurationSummary == "未配置规则")
+        #expect(viewModel.configurationSummary == L10n.noRulesConfigured)
     }
     
     @Test func configurationSummaryShowsAllDisabledWhenNoEnabledRules() {
@@ -766,7 +766,7 @@ struct TimeRuleViewModelConfigurationSummaryTests {
             storageService: mockStorageService
         )
         
-        #expect(viewModel.configurationSummary == "所有规则已禁用")
+        #expect(viewModel.configurationSummary == L10n.allRulesDisabled)
     }
     
     @Test func configurationSummaryShowsEnabledCount() {
@@ -795,7 +795,7 @@ struct TimeRuleViewModelConfigurationSummaryTests {
             storageService: mockStorageService
         )
         
-        #expect(viewModel.configurationSummary == "2 条规则已启用")
+        #expect(viewModel.configurationSummary == L10n.rulesEnabled(2))
     }
 }
 

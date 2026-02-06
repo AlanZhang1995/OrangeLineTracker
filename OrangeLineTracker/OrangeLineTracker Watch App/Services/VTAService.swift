@@ -34,17 +34,17 @@ enum VTAServiceError: Error, LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .networkError(let message):
-            return "网络连接失败: \(message)"
+            return L10n.errorNetworkFailed(message)
         case .apiError(let code, let message):
-            return "API 错误 (\(code)): \(message)"
+            return L10n.errorAPI(code, message)
         case .parsingError(let message):
-            return "数据解析错误: \(message)"
+            return L10n.errorParsing(message)
         case .invalidAPIKey:
-            return "API 密钥无效，请检查配置"
+            return L10n.errorInvalidAPIKey
         case .noDataAvailable:
-            return "暂无列车信息"
+            return L10n.noTrainInfo
         case .invalidURL:
-            return "无效的请求地址"
+            return L10n.errorInvalidURL
         }
     }
 }

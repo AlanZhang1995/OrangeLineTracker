@@ -256,19 +256,19 @@ class TimeRuleViewModel: ObservableObject {
     /// Returns a summary string for the current time rule configuration
     var configurationSummary: String {
         if !isTimeRuleEnabled {
-            return "时间规则已禁用"
+            return L10n.timeRulesDisabled
         }
         
         if timeRules.isEmpty {
-            return "未配置规则"
+            return L10n.noRulesConfigured
         }
         
         let enabledCount = enabledRuleCount
         if enabledCount == 0 {
-            return "所有规则已禁用"
+            return L10n.allRulesDisabled
         }
         
-        return "\(enabledCount) 条规则已启用"
+        return L10n.rulesEnabled(enabledCount)
     }
     
     /// Returns the currently active rule based on the current time

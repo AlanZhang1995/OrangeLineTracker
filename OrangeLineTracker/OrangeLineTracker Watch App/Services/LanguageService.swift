@@ -158,6 +158,14 @@ enum L10n {
     static var smartRefreshHintOff: String { LanguageService.shared.isEnglish ? "Random interval (15-60 min)" : "使用随机间隔 (15-60分钟)" }
     static var smartRefreshFooter: String { LanguageService.shared.isEnglish ? "Smart refresh adjusts frequency based on train arrival time" : "智能刷新会根据列车到站时间动态调整刷新频率，关闭后使用随机间隔" }
     
+    // MARK: - Time Rule Summary
+    static var timeRulesDisabled: String { LanguageService.shared.isEnglish ? "Time rules disabled" : "时间规则已禁用" }
+    static var noRulesConfigured: String { LanguageService.shared.isEnglish ? "No rules configured" : "未配置规则" }
+    static var allRulesDisabled: String { LanguageService.shared.isEnglish ? "All rules disabled" : "所有规则已禁用" }
+    static func rulesEnabled(_ count: Int) -> String {
+        LanguageService.shared.isEnglish ? "\(count) rules enabled" : "\(count) 条规则已启用"
+    }
+    
     // MARK: - Widget
     static var widgetOld: String { LanguageService.shared.isEnglish ? "Old" : "旧" }
     static var widgetCached: String { LanguageService.shared.isEnglish ? "Cached" : "缓存" }

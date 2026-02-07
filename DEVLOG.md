@@ -1,5 +1,29 @@
 # VTA Transit Tracker 开发日志
 
+## 2026-02-06 工作总结 (续)
+
+### 完成的功能
+
+#### 1. 修复 ArrivalView 后台刷新 Bug
+修复了 ArrivalView 在后台仍然每分钟刷新的问题：
+- 原因：`@State` 变量在闭包中被值捕获，状态变化不会反映到闭包内
+- 解决方案：
+  - 使用 `@Environment(\.scenePhase)` 检测 app 前台/后台状态
+  - 用 `onChange(of: scenePhase)` 在状态变化时启动/停止 timer
+  - 后台时完全停止 timer，不再消耗资源
+
+#### 2. 简化刷新逻辑 - 去掉每秒更新
+将每秒触发的 Combine timer 改为简单的每分钟 timer：
+- 去掉了每秒更新倒计时显示的逻辑（不必要）
+- 改用 `Timer.scheduledTimer`，只在整分钟时触发
+- 数据刷新和显示时间一起更新（每分钟一次）
+- 移除了 `import Combine` 依赖
+
+**文件**:
+- `OrangeLineTracker/OrangeLineTracker Watch App/ContentView.swift` - 重写 timer 逻辑
+
+---
+
 ## 2026-02-06 工作总结
 
 ### 完成的功能

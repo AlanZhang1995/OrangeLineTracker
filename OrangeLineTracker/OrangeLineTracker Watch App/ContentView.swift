@@ -7,7 +7,6 @@
 //
 
 import SwiftUI
-import Combine
 
 // MARK: - ContentView
 
@@ -169,14 +168,14 @@ struct ArrivalView: View {
     @ObservedObject var viewModel: MetroViewModel
     @ObservedObject private var languageService = LanguageService.shared
     
-    /// Current time for countdown calculation, triggers view refresh
+    /// Scene phase to detect foreground/background state
+    @Environment(\.scenePhase) private var scenePhase
+    
+    /// Current time for display calculation
     @State private var currentTime = Date()
     
-    /// Timer cancellable for cleanup
-    @State private var timerCancellable: AnyCancellable?
-    
-    /// Flag to track if view is active (for timer management)
-    @State private var isViewActive = false
+    /// Timer for minute-aligned refresh
+    @State private var refreshTimer: Timer?
     
     // MARK: - Computed Properties
     
@@ -219,12 +218,11 @@ struct ArrivalView: View {
         // Pull-to-refresh gesture - Validates: Requirement 6.5
         .refreshable {
             await viewModel.refreshPredictions()
+            currentTime = Date()
         }
         .navigationTitle(L10n.arrivalTime)
         .onAppear {
-            isViewActive = true
-            
-            // Reset current time when view appears
+            // Update current time
             currentTime = Date()
             
             // Auto-refresh when view appears if we have a station selected
@@ -234,59 +232,67 @@ struct ArrivalView: View {
                 }
             }
             
-            // Start the minute-aligned timer using Combine
+            // Start the minute-aligned refresh timer
             startMinuteTimer()
         }
         .onDisappear {
-            isViewActive = false
-            
             // Clean up timer when view disappears
-            timerCancellable?.cancel()
-            timerCancellable = nil
+            refreshTimer?.invalidate()
+            refreshTimer = nil
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Restart timer when app becomes active, stop when inactive
+            if newPhase == .active {
+                startMinuteTimer()
+            } else {
+                refreshTimer?.invalidate()
+                refreshTimer = nil
+            }
         }
     }
     
-    // MARK: - Minute Timer Using Combine
+    // MARK: - Minute Timer
     
-    /// Starts a timer that fires every second and triggers refresh at minute marks (:00 seconds)
-    /// Uses Combine's Timer.publish for reliable SwiftUI integration
-    /// This approach is more reliable than one-shot timers in SwiftUI structs
+    /// Starts a timer that fires at the next minute mark and then every 60 seconds
+    /// Only refreshes when app is in foreground
     private func startMinuteTimer() {
         // Cancel any existing timer
-        timerCancellable?.cancel()
+        refreshTimer?.invalidate()
         
-        // Track the last minute we refreshed to avoid duplicate refreshes
-        var lastRefreshedMinute: Int = -1
+        // Calculate seconds until next minute mark
+        let now = Date()
+        let calendar = Calendar.current
+        let seconds = calendar.component(.second, from: now)
+        let secondsUntilNextMinute = 60 - seconds
         
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
-        print("ArrivalView: ⏰ Starting minute-aligned timer (current: \(formatter.string(from: Date())))")
+        print("ArrivalView: ⏰ Starting minute timer, next refresh in \(secondsUntilNextMinute)s")
         
-        // Use Timer.publish which integrates well with SwiftUI
-        // Fire every second to check if we've hit a minute mark
-        timerCancellable = Timer.publish(every: 1.0, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak viewModel] date in
-                // Always update current time for countdown display
-                currentTime = date
+        // Schedule first fire at next minute mark
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(secondsUntilNextMinute), repeats: false) { [weak viewModel] _ in
+            // Refresh data and update time
+            currentTime = Date()
+            
+            if scenePhase == .active, let vm = viewModel, vm.selectedStation != nil && !vm.isLoading {
+                print("ArrivalView: 🔄 Auto-refreshing at \(formatter.string(from: Date()))")
+                Task {
+                    await vm.refreshPredictions()
+                }
+            }
+            
+            // Then schedule repeating timer every 60 seconds
+            refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak viewModel] _ in
+                currentTime = Date()
                 
-                // Check if we're at a minute mark (second == 0)
-                let calendar = Calendar.current
-                let second = calendar.component(.second, from: date)
-                let minute = calendar.component(.minute, from: date)
-                
-                // Refresh at minute mark if we haven't already refreshed this minute
-                if second == 0 && minute != lastRefreshedMinute {
-                    lastRefreshedMinute = minute
-                    
-                    if let vm = viewModel, vm.selectedStation != nil && !vm.isLoading && isViewActive {
-                        print("ArrivalView: 🔄 Auto-refreshing at minute mark \(formatter.string(from: date))")
-                        Task {
-                            await vm.refreshPredictions()
-                        }
+                if scenePhase == .active, let vm = viewModel, vm.selectedStation != nil && !vm.isLoading {
+                    print("ArrivalView: 🔄 Auto-refreshing at \(formatter.string(from: Date()))")
+                    Task {
+                        await vm.refreshPredictions()
                     }
                 }
             }
+        }
     }
     
     // MARK: - Station Header

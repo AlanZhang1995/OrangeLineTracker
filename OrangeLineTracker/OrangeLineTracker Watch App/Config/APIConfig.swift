@@ -25,7 +25,8 @@ enum APIConfig {
         "4f7220e9-7145-4278-b63c-fdfe3e656dee",
         "fbcf9721-bef4-4dfe-9be7-4f1a5133bb47",
         "737ee8d9-f818-4b38-9c13-94f8b01ef32e",
-        "ee1f3214-9bd1-4994-be36-a718074f6404"
+        "ee1f3214-9bd1-4994-be36-a718074f6404",
+        "3e2ce4c7-bf5e-4247-a731-5fd338f6222d"
     ]
     
     /// Current index for round-robin rotation of fallback keys

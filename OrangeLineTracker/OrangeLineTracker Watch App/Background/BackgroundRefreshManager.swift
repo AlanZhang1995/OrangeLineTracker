@@ -130,6 +130,8 @@ class BackgroundRefreshManager {
         let nextTimeStr = formatter.string(from: nextRefreshDate)
         let intervalMinutes = Int(nextRefreshDate.timeIntervalSinceNow / 60)
         
+        print("BackgroundRefreshManager: 📅 Scheduling next refresh at \(nextTimeStr) (in ~\(intervalMinutes) min)")
+        
         // Schedule the background app refresh task
         WKApplication.shared().scheduleBackgroundRefresh(
             withPreferredDate: nextRefreshDate,
@@ -137,8 +139,6 @@ class BackgroundRefreshManager {
         ) { error in
             if let error = error {
                 print("BackgroundRefreshManager: ❌ Failed to schedule refresh - \(error.localizedDescription)")
-            } else {
-                print("BackgroundRefreshManager: ✅ Next refresh scheduled at \(nextTimeStr) (in ~\(intervalMinutes) min)")
             }
         }
     }
@@ -514,8 +514,10 @@ class BackgroundRefreshManager {
                 // 保存到站时间用于智能刷新计算
                 lastKnownArrivalMinutes = nextPrediction.minutesUntilArrival
                 saveLastArrivalMinutes()
+                
+                print("BackgroundRefreshManager: ✅ Background refresh SUCCESS - next train in \(nextPrediction.minutesUntilArrival) min")
             } else {
-                print("BackgroundRefreshManager: ⚠️ No predictions available")
+                print("BackgroundRefreshManager: ⚠️ Background refresh FAILED - no predictions available")
                 // No predictions available
                 updateComplicationData(ComplicationData.errorState(
                     stationShortName: station.shortName,
@@ -524,7 +526,7 @@ class BackgroundRefreshManager {
             }
         } catch {
             // Error fetching data - update with error state but preserve station info
-            print("BackgroundRefreshManager: ❌ Error fetching predictions - \(error.localizedDescription)")
+            print("BackgroundRefreshManager: ❌ Background refresh FAILED - \(error.localizedDescription)")
             updateComplicationData(ComplicationData.errorState(
                 stationShortName: station.shortName,
                 direction: direction

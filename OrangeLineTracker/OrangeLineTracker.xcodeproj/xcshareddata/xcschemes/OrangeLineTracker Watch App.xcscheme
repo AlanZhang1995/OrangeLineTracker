@@ -69,6 +69,17 @@
                ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D43A3F4C2F325D64001A8B5C"
+               BuildableName = "OrangeLineTracker Watch AppUITests.xctest"
+               BlueprintName = "OrangeLineTracker Watch AppUITests"
+               ReferencedContainer = "container:OrangeLineTracker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
